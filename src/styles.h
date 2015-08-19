@@ -43,7 +43,7 @@ static const struct { int fg, bg, attr; } styles[] {
 
 	{ COLOR_WHITE,	19,			 	0		},
 
-	{ COLOR_WHITE,	22, 			0		},
+	{ COLOR_WHITE,	COLOR_GREEN, 	0		},
 
 };
 

@@ -30,7 +30,6 @@ Server::Server(Tune& tune) : _tune(tune) {
 	SDL_OpenAudio(&spec, &spec);
 	SDL_PauseAudio(0);
 
-	init();
 }
 
 Server::~Server() {

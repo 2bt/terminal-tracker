@@ -218,7 +218,7 @@ void PatternWin::key(int ch) {
 
 	// edit pattern name
 	if (edit_name) {
-		if ((isalnum(ch) || ispunct(ch)) && pat_name.size() < PATTERN_CHAR_WIDTH) {
+		if ((isalnum(ch) || strchr("_-", ch)) && pat_name.size() < PATTERN_CHAR_WIDTH) {
 			pat_name += ch;
 		}
 		else if (ch == KEY_BACKSPACE && pat_name.size() > 0) pat_name.pop_back();

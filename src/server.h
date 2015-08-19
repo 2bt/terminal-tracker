@@ -10,6 +10,7 @@ class Server {
 public:
 	Server(Tune& tune);
 	~Server();
+	void init();
 
 	int get_row()	const { return _row; }
 	int get_block()	const { return _block; }
@@ -22,7 +23,6 @@ private:
 	}
 	void mix(short* buffer, int length);
 	void tick();
-	void init();
 	void apply_macro(const std::string& macro_name, Channel& chan) const;
 
 	bool 				_playing = false;

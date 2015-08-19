@@ -61,13 +61,14 @@ MessageWin msg_win;
 
 void done() { endwin(); }
 int main() {
+
 	if (!load_tune(tune, "tune")) {
 		msg_win.say("error loading tune");
 	}
+
 	if (!save_tune(tune, "tune_")) {
 		msg_win.say("error saving tune");
 	}
-
 
 	atexit(&done);
 
@@ -84,6 +85,8 @@ int main() {
 	pat_win.resize();
 	msg_win.resize();
 
+
+	server.init();
 
 	bool running = true;
 	while (running) {

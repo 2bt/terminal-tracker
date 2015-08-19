@@ -4,6 +4,112 @@
 #include "patternwin.h"
 
 
+
+
+static std::vector<std::string> split(const char* s) {
+	std::vector<std::string> res;
+
+	for (;;) {
+		s += strspn(s, " \n\t");
+		int l = strcspn(s, " \n\t");
+		if (l == 0) break;
+		res.emplace_back(s, s + l);
+		s += l;
+	}
+
+	return res;
+}
+
+static std::string& strip_dots(std::string& w) {
+	while (!w.empty() && w.back() == '.') w.pop_back();
+	return w;
+}
+
+
+
+
+bool load_tune(Tune& tune, const char* name) {
+	FILE* f = fopen(name, "r");
+	if (!f) return false;
+
+	Pattern* pat = nullptr;
+	char s[512];
+	int mode = 0;
+
+	while (fgets(s, sizeof(s), f)) {
+		if (s[0] == '#') continue;
+
+		auto words = split(s);
+
+		if (mode == 't') {
+			if (s[0] != ' ') mode = 0;
+			else {
+				tune.table.push_back({});
+				for (int i = 0; i < std::min<int>(CHANNEL_COUNT, words.size()); i++) {
+					tune.table.back()[i] = strip_dots(words[i]);
+				}
+				continue;
+			}
+		}
+
+		if (mode == 'p') {
+			if (s[0] != ' ') mode = 0;
+			else {
+				pat->push_back({});
+				auto& row = pat->back();
+				for (int i = 0; i < std::min<int>(MACROS_PER_ROW + 1, words.size()); i++) {
+					auto& w = words[i];
+
+					if (i == 0) {
+						if (w == "===") row.note = -1;
+						else if (w == "...") row.note = 0;
+						else {
+							if (w.size() != 3 ||
+								w[0] < 'A' || w[0] > 'G' ||
+								(w[1] != '-' && w[1] != '#') ||
+								w[2] < '0' || w[2] > '9') {
+								return false;
+							}
+							row.note = std::string("CCDDEFFGGAAB").find(w[0]) + 1;
+							row.note += w[1] == '#';
+							row.note += (w[2] - '0') * 12;
+						}
+					}
+					else row.macros[i - 1] = strip_dots(w);
+				}
+				continue;
+			}
+		}
+
+
+		if (words.size() == 1 && words[0] == "TABLE") {
+			mode = 't';
+			tune.table.clear();
+			continue;
+		}
+
+		if (words.size() == 2 && words[0] == "PATTERN") {
+			pat = &tune.patterns[words[1]];
+			pat->clear();
+			mode = 'p';
+			continue;
+		}
+
+		return false;
+	}
+	fclose(f);
+	return true;
+}
+
+
+
+
+
+
+
+
+
+
 bool save_tune(const Tune& tune, const char* name) {
 	FILE* f = fopen(name, "w");
 	if (!f) return false;
@@ -38,80 +144,6 @@ bool save_tune(const Tune& tune, const char* name) {
 			}
 			fprintf(f, "\n");
 		}
-	}
-	fclose(f);
-	return true;
-}
-
-bool load_tune(Tune& tune, const char* name) {
-	FILE* f = fopen(name, "r");
-	if (!f) return false;
-
-	char s[512];
-	char pn[512];
-	Pattern* pat = nullptr;
-	int mode = 0;
-
-	while (fgets(s, sizeof(s), f)) {
-		if (mode == 't') {
-			if (s[0] != ' ') mode = 0;
-			else {
-				tune.table.push_back({});
-				char *p = s;
-				int i = 0;
-				while ((p = strchr(p, ' ')) && i < CHANNEL_COUNT) {
-					int len = strcspn(++p, ". \n");
-					tune.table.back()[i] = std::string(p, p+len);
-					i++;
-				}
-				continue;
-			}
-		}
-
-		if (mode == 'p') {
-			if (s[0] != ' ') mode = 0;
-			else {
-				pat->push_back({});
-				auto& row = pat->back();
-				char *p = s;
-				int i = -1;
-				while ((p = strchr(p, ' ')) && i < MACROS_PER_ROW) {
-					int len = strcspn(++p, ". \n");
-					std::string w(p, p+len);
-					if (i == -1) {
-						if (w == "===") row.note = -1;
-						else if (w == "") row.note = 0;
-						else {
-							if (w.size() != 3 ||
-								w[0] < 'A' || w[0] > 'G' ||
-								(w[1] != '-' && w[1] != '#') ||
-								w[2] < '0' || w[2] > '9') {
-								return false;
-							}
-							row.note = std::string("CCDDEFFGGAAB").find(w[0]) + 1;
-							row.note += w[1] == '#';
-							row.note += (w[2] - '0') * 12;
-						}
-					}
-					else row.macros[i] = w;
-					i++;
-				}
-				continue;
-			}
-		}
-
-		if (strcmp(s, "TABLE\n") == 0) {
-			mode = 't';
-			tune.table.clear();
-			continue;
-		}
-		if (sscanf(s, "PATTERN %s", pn) == 1) {
-			pat = &tune.patterns[std::string(pn)];
-			pat->clear();
-			mode = 'p';
-			continue;
-		}
-		return false;
 	}
 	fclose(f);
 	return true;
