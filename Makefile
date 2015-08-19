@@ -1,5 +1,5 @@
 
-CF = -Wall --std=c++14 -O2
+CF = -Wall --std=c++14 -I PEGTL/ -O2
 LF = -Wall --std=c++14 -lncurses -lSDL -lportmidi -lsndfile
 
 SRC = $(wildcard src/*.cpp)

@@ -1,14 +1,81 @@
 #include <string.h>
 
+#include <pegtl.hh>
+
 #include "tune.h"
 #include "patternwin.h"
 
 
+namespace peg {
+using namespace pegtl;
+
+	struct Name : identifier {};
+	struct Number : seq<
+		opt<one<'-'>>,
+		plus<digit>,
+		opt<
+			one<'.'>,
+			plus<digit> > > {};
+
+
+	struct Pipe : one<'|'> {};
+	struct Plus : one<'+'> {};
+
+	struct Envelope : seq<
+		opt<
+			star<
+				opt<pad<Plus, space>>,
+				pad<Number, space> >,
+			pad<Pipe, space> >,
+		plus<
+			opt<pad<Plus, space>>,
+			pad<Number, space> > > {};
+
+
+	struct MacroLine : seq<
+		pad<Name, space>,
+		pad<one<'='>, space>,
+		pad<Envelope, space>,
+		eof > {};
+
+
+	struct MacroLineState {
+		bool delta;
+		std::string name;
+		::Envelope env;
+	};
+
+	template<typename Rule>
+	struct MacroAction : pegtl::nothing<Rule> {};
+
+	template<> struct MacroAction<Name> {
+		static void apply(const pegtl::input& in, MacroLineState& state) {
+			state.name = in.string();
+		}
+	};
+
+	template<> struct MacroAction<Plus> {
+		static void apply(const pegtl::input& in, MacroLineState& state) {
+			state.delta = true;
+		}
+	};
+	template<> struct MacroAction<Number> {
+		static void apply(const pegtl::input& in, MacroLineState& state) {
+			state.env.nodes.push_back({std::stof(in.string()), state.delta});
+			state.delta = false;
+		}
+	};
+	template<> struct MacroAction<Pipe> {
+		static void apply(const pegtl::input& in, MacroLineState& state) {
+			state.env.loop = state.env.nodes.size();
+		}
+	};
+
+};
 
 
 static std::vector<std::string> split(const char* s) {
 	std::vector<std::string> res;
-
 	for (;;) {
 		s += strspn(s, " \n\t");
 		int l = strcspn(s, " \n\t");
@@ -16,7 +83,6 @@ static std::vector<std::string> split(const char* s) {
 		res.emplace_back(s, s + l);
 		s += l;
 	}
-
 	return res;
 }
 
@@ -33,16 +99,23 @@ bool load_tune(Tune& tune, const char* name) {
 	if (!f) return false;
 
 	Pattern* pat = nullptr;
+	Macro* macro = nullptr;
 	char s[512];
 	int mode = 0;
+	int line_nr = 0;
 
 	while (fgets(s, sizeof(s), f)) {
-		if (s[0] == '#') continue;
+		line_nr++;
 
 		auto words = split(s);
 
+		// comments
+		if (words.empty()) continue;
+		if (words[0][0] == '#') continue;
+
+		// table line
 		if (mode == 't') {
-			if (s[0] != ' ') mode = 0;
+			if (!isspace(s[0])) mode = 0;
 			else {
 				tune.table.push_back({});
 				for (int i = 0; i < std::min<int>(CHANNEL_COUNT, words.size()); i++) {
@@ -52,8 +125,9 @@ bool load_tune(Tune& tune, const char* name) {
 			}
 		}
 
+		// pattern line
 		if (mode == 'p') {
-			if (s[0] != ' ') mode = 0;
+			if (!isspace(s[0]) || words.empty()) mode = 0;
 			else {
 				pat->push_back({});
 				auto& row = pat->back();
@@ -82,6 +156,19 @@ bool load_tune(Tune& tune, const char* name) {
 		}
 
 
+		// macro line
+		if (mode == 'm') {
+			if (!isspace(s[0]) || words.empty()) mode = 0;
+			else {
+				peg::MacroLineState state;
+				if (!pegtl::parse<peg::MacroLine,peg::MacroAction>(s, "", state)) return false;
+				macro->envs[state.name] = state.env;
+				continue;
+			}
+		}
+
+
+
 		if (words.size() == 1 && words[0] == "TABLE") {
 			mode = 't';
 			tune.table.clear();
@@ -95,16 +182,27 @@ bool load_tune(Tune& tune, const char* name) {
 			continue;
 		}
 
+		if (words.size() >= 2 && words[0] == "MACRO") {
+			macro = &tune.macros[words[1]];
+			macro->envs.clear();
+			macro->parents.clear();
+			if (words.size() > 2) {
+				if (words[2] != "<") return false;
+				// parents
+				for (int i = 3; i < (int) words.size(); i++) {
+					macro->parents.push_back(words[i]);
+				}
+			}
+			mode = 'm';
+			continue;
+		}
+
+
 		return false;
 	}
 	fclose(f);
 	return true;
 }
-
-
-
-
-
 
 
 
