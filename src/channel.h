@@ -52,7 +52,6 @@ private:
 		void init(Envelope env) {
 			_env = env;
 			_pos = 0;
-			_value = 0;
 			_first_tick = true;
 		}
 		bool tick() {

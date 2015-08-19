@@ -46,7 +46,7 @@ private:
 
 
 	std::string		macro = "foo";
-	int				octave = 4;
+	int				octave = 3;
 
-	Tune&		tune;
+	Tune& tune;
 };
