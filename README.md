@@ -10,6 +10,7 @@ Libs you'll need:
 	- libsndfile
 
 Try it out:
+
 	$ git submodule init
 	$ make
 	$ ./tt a.tune a.watch
