@@ -2,7 +2,7 @@
 #include "server.h"
 
 
-Server::Server(Tune& tune) : _tune(tune) {
+void Server::init(Tune* tune) {
 
 	// open log file
 	SF_INFO info = { 0, MIXRATE, 2, SF_FORMAT_WAV | SF_FORMAT_PCM_16 };
@@ -28,8 +28,17 @@ Server::Server(Tune& tune) : _tune(tune) {
 		2, 0, 1024, 0, 0, &Server::audio_callback, this
 	};
 	SDL_OpenAudio(&spec, &spec);
-	SDL_PauseAudio(0);
 
+	_frame = 0;
+	_tick = 0;
+	_row = 0;
+	_block = 0;
+	_playing = true;
+	_tune = tune;
+
+	_ticks_per_row.init(_tune->ticks_per_row);
+
+	SDL_PauseAudio(0);
 }
 
 Server::~Server() {
@@ -39,14 +48,6 @@ Server::~Server() {
 	Pm_Terminate();
 }
 
-
-void Server::init() {
-	_frame = 0;
-	_tick = 0;
-	_row = 0;
-	_block = 0;
-	_playing = true;
-}
 
 void Server::tick() {
 
@@ -70,14 +71,19 @@ void Server::tick() {
 //		}
 //	}
 
+	// tick server
+	if (_tick == 0) { // new row
+		_ticks_per_row.tick();
+	}
 
-	auto& line = _tune.table[_block];
+	// tick channels
+	auto& line = _tune->table[_block];
 	int i = 0;
 	for (auto& chan : _channels) {
 		if (_tick == 0) {
 			auto& pat_name = line[i++];
-			if (_tune.patterns.count(pat_name)) {
-				auto& pat = _tune.patterns[pat_name];
+			if (_tune->patterns.count(pat_name)) {
+				auto& pat = _tune->patterns[pat_name];
 				if (_row < (int) pat.size()) {
 					auto& row = pat[_row];
 					if (row.note != 0) chan.note_event(row.note);
@@ -89,11 +95,15 @@ void Server::tick() {
 	}
 }
 
-void Server::apply_macro(const std::string& macro_name, Channel& chan) const {
-	if (macro_name == "" || _tune.macros.count(macro_name) == 0) return;
-	auto& macro = _tune.macros.at(macro_name);
-	for (auto& m : macro.parents) apply_macro(m, chan);
-	for (auto& p : macro.envs) chan.set_param_env(p.first, p.second);
+bool Server::apply_macro(const std::string& macro_name, Channel& chan) const {
+	if (macro_name == "") return false;
+	auto it = _tune->macros.find(macro_name);
+	if (it == _tune->macros.end()) return false;
+	auto& macro = it->second;
+	int res = true;
+	for (auto& m : macro.parents) res &= apply_macro(m, chan);
+	for (auto& p : macro.envs) res &= chan.set_param_env(p.first, p.second);
+	return res;
 }
 
 void Server::mix(short* buffer, int length) {
@@ -101,13 +111,13 @@ void Server::mix(short* buffer, int length) {
 
 		if (_playing) {
 			if (_frame == 0) tick();
-			if (++_frame >= _tune.frames_per_tick) {
+			if (++_frame >= _tune->frames_per_tick) {
 				_frame = 0;
-				if (++_tick >= _tune.ticks_per_row) {
+				if (++_tick >= _ticks_per_row.val()) {
 					_tick = 0;
-					if (++_row >= get_max_rows(_tune.table[_block], _tune.patterns)) {
+					if (++_row >= get_max_rows(_tune->table[_block], _tune->patterns)) {
 						_row = 0;
-						if (++_block >= (int) _tune.table.size()) _block = 0;
+						if (++_block >= (int) _tune->table.size()) _block = 0;
 					}
 				}
 			}

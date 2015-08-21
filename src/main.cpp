@@ -1,6 +1,8 @@
 #include <curses.h>
 #include <ctype.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/inotify.h>
 
 #include "tune.h"
 #include "messagewin.h"
@@ -12,12 +14,7 @@
 
 
 static Tune tune = {
-//	{ { "bass" } },
-//	{ { "bass", { { 49, "foo" }, {}, { -1 }, {},
-//				  {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, } } },
-
-	{},
-	{},
+	{}, {},
 	{
 		{
 			"default", {
@@ -34,44 +31,47 @@ static Tune tune = {
 				}
 			}
 		},
-
-
-
-		{
-			"foo", {
-				{ "default" },
-				{
-					{ "wave", {{3, 0}}},
-					{ "pulsewidth", {{0.3, {0.005, true}}, 1}},
-					{ "vibratospeed", 0.1 },
-					{ "vibratodepth", 0.4 },
-//					{ "volume", 0.1 },
-				}
-			}
-		},
 	},
-	8,
-	800
+	800, 8,
 };
 
 
 
 
-Server server(tune);
-PatternWin pat_win(tune);
-MessageWin msg_win;
+Server		server;
+PatternWin	pat_win;
+MessageWin	msg_win;
 
 
 void done() { endwin(); }
-int main() {
+int main(int argc, char** argv) {
 
-	if (!load_tune(tune, "tune")) {
-		msg_win.say("error loading tune");
+	if (argc != 2 && argc != 3) {
+		printf("usage: %s tune-file [tune-watch-file]\n", argv[0]);
+		return 0;
+	}
+	const char* tunefile = argv[1];
+	const char* tunewatchfile = (argc == 3) ? argv[2] : nullptr;
+
+
+	int inotify_fd = 0;
+	int tunewatch = 0;
+
+	if (!load_tune(tune, tunefile)) {
+		msg_win.say("Error loading tune file");
 	}
 
-	if (!save_tune(tune, "tune_")) {
-		msg_win.say("error saving tune");
+	if (tunewatchfile) {
+		inotify_fd = inotify_init1(IN_NONBLOCK);
+		tunewatch = inotify_add_watch(inotify_fd, tunewatchfile, IN_MODIFY);
+		if (!load_tune(tune, tunewatchfile)) {
+			msg_win.say("Error loading tune watch file");
+		}
 	}
+
+//	if (!save_tune(tune, "tune_")) {
+//		msg_win.say("error saving tune");
+//	}
 
 	atexit(&done);
 
@@ -85,14 +85,33 @@ int main() {
 
 	init_styles();
 
-	pat_win.resize();
+
+	pat_win.init(&tune, tunefile);
 	msg_win.resize();
 
-
-	server.init();
+	server.init(&tune);
 
 	bool running = true;
 	while (running) {
+
+		if (tunewatchfile) {
+			inotify_event event;
+			int r;
+			while ((r = read(inotify_fd, &event, sizeof(inotify_event))) > 0) {
+
+				if (event.wd != tunewatch) continue;
+
+				msg_win.say("Reloading tune watch file... ");
+
+				inotify_rm_watch(inotify_fd, tunewatch);
+				tunewatch = inotify_add_watch(inotify_fd, tunewatchfile, IN_MODIFY);
+
+				if (!load_tune(tune, tunewatchfile)) msg_win.append("error.");
+				else msg_win.append("done.");
+			}
+		}
+
+
 		int ch = getch();
 		switch (ch) {
 		case ERR: break;

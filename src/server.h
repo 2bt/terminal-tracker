@@ -6,11 +6,11 @@
 #include "channel.h"
 
 
+
 class Server {
 public:
-	Server(Tune& tune);
 	~Server();
-	void init();
+	void init(Tune* tune);
 
 	int get_row()	const { return _row; }
 	int get_block()	const { return _block; }
@@ -23,7 +23,7 @@ private:
 	}
 	void mix(short* buffer, int length);
 	void tick();
-	void apply_macro(const std::string& macro_name, Channel& chan) const;
+	bool apply_macro(const std::string& macro_name, Channel& chan) const;
 
 	bool 				_playing = false;
 	SNDFILE*			_log;
@@ -34,8 +34,10 @@ private:
 	int		_row;
 	int		_block;
 
+	Param	_ticks_per_row;
+
 	std::array<Channel,CHANNEL_COUNT> _channels;
-	Tune& _tune;
+	Tune* _tune;
 };
 
 extern Server server;

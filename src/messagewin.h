@@ -22,7 +22,7 @@ public:
 	virtual void draw() {
 //		set_style(NORMAL);
 		for (int y = 0; y < height; y++) {
-			move(top + y, left);
+			move(top + height - y - 1, left);
 			if (y < (int) messages.size()) {
 				printw("%-*s", width, messages[y].c_str());
 			}
@@ -33,6 +33,14 @@ public:
 //		set_style(DEFAULT);
 	}
 
+	void append(const char* format, ...) {
+		char line[256];
+		va_list a;
+		va_start(a, format);
+		vsnprintf(line, 256, format, a);
+		va_end(a);
+		messages.front() += line;
+	}
 	void say(const char* format, ...) {
 		char line[256];
 		va_list a;

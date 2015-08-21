@@ -11,11 +11,12 @@ public:
 		CHAN_CHAR_WIDTH = 3 + MACROS_PER_ROW * (MACRO_CHAR_WIDTH + 1)
 	};
 
-	PatternWin(Tune& tune) : tune(tune) {
-		top = 1;
-		left = 0;
+	void init(Tune* tune, const char* tunefile) {
+		this->tune = tune;
+		this->tunefile = tunefile;
 		resize();
 	}
+
 	virtual void resize();
 	virtual void draw();
 	virtual void key(int ch);
@@ -25,7 +26,7 @@ private:
 	void do_scroll();
 
 
-	int top = 0;
+	int top = 1;
 	int left = 0;
 	int width;
 	int height;
@@ -41,12 +42,14 @@ private:
 	int scroll_y1_view;
 
 
-	bool			edit_name = false;
+	enum EditMode { OFF, PATTERN, MACRO };
+	EditMode		edit_mode = OFF;
 	std::string		old_name;
 
 
-	std::string		macro = "foo";
+	std::string		macro = "";
 	int				octave = 3;
 
-	Tune& tune;
+	Tune*			tune;
+	const char*		tunefile;
 };

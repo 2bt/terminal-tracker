@@ -42,6 +42,7 @@ struct Macro {
 
 typedef std::vector<Row>						Pattern;
 typedef std::map<std::string,Pattern>			PatternMap;
+typedef std::map<std::string,Macro>				MacroMap;
 typedef std::array<std::string,CHANNEL_COUNT>	TableLine;
 
 
@@ -57,11 +58,11 @@ inline int get_max_rows(const TableLine& line, const PatternMap& patterns) {
 struct Tune {
 	std::vector<TableLine>		table;
 	PatternMap					patterns;
-	std::map<std::string,Macro>	macros;
-	int							ticks_per_row;
+	MacroMap					macros;
 	int							frames_per_tick;
+	Envelope					ticks_per_row;
 };
 
 
-bool save_tune(const Tune& tune, const char* name);
+bool save_tune(const Tune& tune, const char* name, bool all=false);
 bool load_tune(Tune& tune, const char* name);

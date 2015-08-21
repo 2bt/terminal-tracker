@@ -26,14 +26,10 @@ using namespace pegtl;
 		opt<padded<Add>>,
 		padded<Number> > {};
 
-	struct EnvEnd : sor<
-		seq<Node, EnvEnd>,
+	struct Envelope : sor<
+		seq<Node, Envelope>,
 		seq<Pipe, Padding, plus<Node>>,
 		success > {};
-
-	struct Envelope : sor<
-		seq<Node, EnvEnd>,
-		seq<Pipe, Padding, plus<Node>> > {};
 
 	struct MacroLine : seq<
 		Padding,
@@ -64,7 +60,7 @@ using namespace pegtl;
 	};
 	template<> struct MacroAction<Number> {
 		static void apply(const pegtl::input& in, MacroLineState& state) {
-			printf("number %s\n", in.string().c_str());
+//			printf("number %s\n", in.string().c_str());
 			state.env.nodes.push_back({std::stof(in.string()), state.delta});
 			state.delta = false;
 		}
@@ -146,7 +142,7 @@ bool load_tune(Tune& tune, const char* name) {
 								w[0] < 'A' || w[0] > 'G' ||
 								(w[1] != '-' && w[1] != '#') ||
 								w[2] < '0' || w[2] > '9') {
-								return false;
+								goto FAIL;
 							}
 							row.note = std::string("CCDDEFFGGAAB").find(w[0]) + 1;
 							row.note += w[1] == '#';
@@ -165,8 +161,8 @@ bool load_tune(Tune& tune, const char* name) {
 			if (!isspace(s[0]) || words.empty()) mode = 0;
 			else {
 				peg::MacroLineState state;
-				if (!pegtl::parse<peg::MacroLine,peg::MacroAction>(s, "", state)) return false;
-				printf(".\n", state.env.nodes.size());
+				if (!pegtl::parse<peg::MacroLine,peg::MacroAction>(s, "", state)) goto FAIL;
+//				printf(".\n", state.env.nodes.size());
 				macro->envs[state.name] = state.env;
 				continue;
 			}
@@ -192,7 +188,7 @@ bool load_tune(Tune& tune, const char* name) {
 			macro->envs.clear();
 			macro->parents.clear();
 			if (words.size() > 2) {
-				if (words[2] != "<") return false;
+				if (words[2] != "<") goto FAIL;
 				// parents
 				for (int i = 3; i < (int) words.size(); i++) {
 					macro->parents.push_back(words[i]);
@@ -203,17 +199,30 @@ bool load_tune(Tune& tune, const char* name) {
 		}
 
 
-		return false;
+		goto FAIL;
 	}
 	fclose(f);
 	return true;
+
+FAIL:
+	fclose(f);
+	return false;
 }
 
 
 
+static void write_env(FILE* f, const Envelope& env) {
+	int i = 0;
+	for (auto& node : env.nodes) {
+		if (i++ == env.loop) fprintf(f, " |");
+		fprintf(f, " ");
+		if (node.delta) fprintf(f, "+");
+		fprintf(f, "%g", node.value);
+	}
+}
 
 
-bool save_tune(const Tune& tune, const char* name) {
+bool save_tune(const Tune& tune, const char* name, bool all) {
 	FILE* f = fopen(name, "w");
 	if (!f) return false;
 
@@ -248,34 +257,27 @@ bool save_tune(const Tune& tune, const char* name) {
 			fprintf(f, "\n");
 		}
 	}
-	for (auto& p : tune.macros) {
-		fprintf(f, "MACRO %s", p.first.c_str());
-		auto& macro = p.second;
-		if (!macro.parents.empty()) {
-			fprintf(f, " <");
-			for (auto& p : macro.parents) fprintf(f, " %s", p.c_str());
-		}
-		fprintf(f, "\n");
-		for (auto& p : macro.envs) {
-			auto& env = p.second;
-			fprintf(f, " %-16s =", p.first.c_str());
-			int i = 0;
-			for (auto& node : env.nodes) {
-				if (i++ == env.loop) fprintf(f, " |");
-				fprintf(f, " ");
-				if (node.delta) fprintf(f, "+");
-				fprintf(f, "%g", node.value);
+
+
+	if (all) {
+		for (auto& p : tune.macros) {
+			fprintf(f, "MACRO %s", p.first.c_str());
+			auto& macro = p.second;
+			if (!macro.parents.empty()) {
+				fprintf(f, " <");
+				for (auto& p : macro.parents) fprintf(f, " %s", p.c_str());
 			}
 			fprintf(f, "\n");
+			for (auto& p : macro.envs) {
+				fprintf(f, " %-16s =", p.first.c_str());
+				write_env(f, p.second);
+				fprintf(f, "\n");
+			}
 		}
 	}
-
 
 
 	fclose(f);
 	return true;
 }
-
-
-
 

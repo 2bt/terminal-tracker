@@ -48,7 +48,7 @@ void PatternWin::draw() {
 	for (int r = 0; r < scroll_y0_view; r++) {
 		move(top + r + 3, left);
 		addch(ACS_VLINE);
-		if (r + scroll_y0 < (int) tune.table.size()) {
+		if (r + scroll_y0 < (int) tune->table.size()) {
 			set_style(r == cursor_y0 ? HL_NORMAL : NORMAL);
 			printw("%02X", r + scroll_y0);
 			set_style(FRAME);
@@ -60,8 +60,8 @@ void PatternWin::draw() {
 
 
 
-	auto& line = tune.table[cursor_y0];
-	int max_rows = get_max_rows(line, tune.patterns);
+	auto& line = tune->table[cursor_y0];
+	int max_rows = get_max_rows(line, tune->patterns);
 	int y1 = top + scroll_y0_view + 3;
 
 	move(y1, left);
@@ -93,7 +93,7 @@ void PatternWin::draw() {
 	for (int chan_nr = scroll_x; chan_nr < chan_limit; chan_nr++, x += CHAN_CHAR_WIDTH + 1) {
 
 		auto& pat_name = line[chan_nr];
-		auto pat = tune.patterns.count(pat_name) ? &tune.patterns[pat_name] : nullptr;
+		auto pat = tune->patterns.count(pat_name) ? &tune->patterns[pat_name] : nullptr;
 
 
 		// table head
@@ -125,15 +125,15 @@ void PatternWin::draw() {
 		for (int r = 0; r < scroll_y0_view; r++) {
 			int i = r + scroll_y0;
 			move(top + r + 3, x);
-			if (i < (int) tune.table.size()) {
+			if (i < (int) tune->table.size()) {
 
 				int style = MACRO;
 				if (i == server_block) style = PL_MACRO;
 				if (i == cursor_y0) style = HL_MACRO;
-				if (i == cursor_y0 && cursor_x == chan_nr) style = edit_name ? EDIT : CS_MACRO;
+				if (i == cursor_y0 && cursor_x == chan_nr) style = (edit_mode == PATTERN) ? ET_MACRO : CS_MACRO;
 				set_style(style);
 
-				auto pn = tune.table[i][chan_nr];
+				auto pn = tune->table[i][chan_nr];
 				printw("%s", pn.c_str());
 				addchs(pn == "" ? ' ' : '.', CHAN_CHAR_WIDTH - pn.size());
 			}
@@ -154,9 +154,9 @@ void PatternWin::draw() {
 				auto& row = pat->at(i);
 
 				int style = NOTE;
-				if (i == server_row && tune.table[server_block][chan_nr] == pat_name) style = PL_NOTE;
+				if (i == server_row && tune->table[server_block][chan_nr] == pat_name) style = PL_NOTE;
 				if (i == cursor_y1) style = HL_NOTE;
-				if (i == cursor_y1 && cursor_x == chan_nr) style = CS_NOTE;
+				if (i == cursor_y1 && cursor_x == chan_nr) style = (edit_mode == MACRO) ? ET_NOTE : CS_NOTE;
 				set_style(style);
 
 
@@ -174,7 +174,7 @@ void PatternWin::draw() {
 				for (int m = 0; m < MACROS_PER_ROW; m++) {
 					std::string macro = row.macros[m];
 					printw(" %s", macro.c_str());
-					addchs('.', MACRO_CHAR_WIDTH - macro.size());
+					addchs('.', std::max<int>(0, MACRO_CHAR_WIDTH - macro.size()));
 				}
 			}
 			else {
@@ -198,40 +198,51 @@ void PatternWin::draw() {
 	}
 
 
-	if (edit_name) {
+	mvprintw(top - 1, left + 20, "Oct:%d|Macro:%-8s", octave, macro.c_str());
+
+
+	if (edit_mode == PATTERN) {
 		curs_set(1);
 		move(4 + cursor_y0 - scroll_y0,
 			(cursor_x - scroll_x) * (CHAN_CHAR_WIDTH + 1) + 4 + line[cursor_x].size());
+	}
+	else if (edit_mode == MACRO) {
+		curs_set(1);
+		auto& pat_name = line[cursor_x];
+		auto& pat = tune->patterns[pat_name];
+		auto& row = pat[cursor_y1];
+		move(4 + scroll_y0_view + cursor_y1 - scroll_y1 + 1,
+			(cursor_x - scroll_x) * (CHAN_CHAR_WIDTH + 1) + 4 + row.macros[0].size() + 4);
 	}
 	else curs_set(0);
 }
 
 
 void PatternWin::key(int ch) {
-	auto& line = tune.table[cursor_y0];
+	auto& line = tune->table[cursor_y0];
 	auto& pat_name = line[cursor_x];
-	auto pat = tune.patterns.count(pat_name) ? &tune.patterns[pat_name] : nullptr;
+	auto pat = tune->patterns.count(pat_name) ? &tune->patterns[pat_name] : nullptr;
 	auto row = (pat && cursor_y1 < (int) pat->size()) ? &pat->at(cursor_y1) : nullptr;
 
-	int max_rows = get_max_rows(line, tune.patterns);
+	int max_rows = get_max_rows(line, tune->patterns);
 
 
 	// edit pattern name
-	if (edit_name) {
+	if (edit_mode == PATTERN) {
 		if ((isalnum(ch) || strchr("_-", ch)) && pat_name.size() < PATTERN_CHAR_WIDTH) {
 			pat_name += ch;
 		}
 		else if (ch == KEY_BACKSPACE && pat_name.size() > 0) pat_name.pop_back();
 		else if (ch == 27) {
-			edit_name = false;
+			edit_mode = OFF;
 			pat_name.assign(old_name);
 		}
 		else if (ch == '\n') {
-			edit_name = false;
+			edit_mode = OFF;
 
 			// new pattern
-			if (old_name == "" && pat_name != "" && tune.patterns.count(pat_name) == 0) {
-				tune.patterns[pat_name].resize(16);
+			if (old_name == "" && pat_name != "" && tune->patterns.count(pat_name) == 0) {
+				tune->patterns[pat_name].resize(16);
 			}
 
 			// TODO: delete pattern, if unused
@@ -242,6 +253,23 @@ void PatternWin::key(int ch) {
 		return;
 	}
 
+	// edit macro name
+	if (edit_mode == MACRO) {
+		auto& macro_name = row->macros[0];
+		if ((isalnum(ch) || strchr("_-", ch)) && macro_name.size() < MACRO_CHAR_WIDTH) {
+			macro_name += ch;
+		}
+		else if (ch == KEY_BACKSPACE && macro_name.size() > 0) macro_name.pop_back();
+		else if (ch == 27) {
+			edit_mode = OFF;
+			macro_name.assign(old_name);
+		}
+		else if (ch == '\n') {
+			edit_mode = OFF;
+			macro = macro_name;
+		}
+		return;
+	}
 
 	switch (ch) {
 	case KEY_UP:
@@ -264,12 +292,12 @@ void PatternWin::key(int ch) {
 		return;
 
 	case KEY_CTRL_DOWN:
-		if (++cursor_y0 >= (int) tune.table.size()) cursor_y0 = 0;
+		if (++cursor_y0 >= (int) tune->table.size()) cursor_y0 = 0;
 		do_scroll();
 		return;
 
 	case KEY_CTRL_UP:
-		if (--cursor_y0 < 0) cursor_y0 = std::max(0, (int) tune.table.size() - 1);
+		if (--cursor_y0 < 0) cursor_y0 = std::max(0, (int) tune->table.size() - 1);
 		do_scroll();
 		return;
 
@@ -297,18 +325,25 @@ void PatternWin::key(int ch) {
 		return;
 
 	case KEY_CTRL_X:
-		tune.table.push_back({});
+		tune->table.push_back({});
 		return;
 	case KEY_CTRL_Y:
-		if (tune.table.size() > 1) {
-			tune.table.pop_back();
-			cursor_y0 = std::min(cursor_y0, (int) tune.table.size() - 1);
+		if (tune->table.size() > 1) {
+			tune->table.pop_back();
+			cursor_y0 = std::min(cursor_y0, (int) tune->table.size() - 1);
 		}
 		return;
 
 	case KEY_CTRL_N:
-		edit_name = true;
+		edit_mode = PATTERN;
 		old_name = pat_name;
+		return;
+
+	case 'N':
+		if (row) {
+			edit_mode = MACRO;
+			old_name = row->macros[0];
+		}
 		return;
 
 	case KEY_BACKSPACE:
@@ -323,6 +358,31 @@ void PatternWin::key(int ch) {
 		break;
 	case '>':
 		if (++octave > 8) octave = 8;
+		break;
+
+	case '+': {
+			auto it = tune->macros.find(macro);
+			it++;
+			if (macro == "") it = tune->macros.begin();
+			if (it != tune->macros.end()) macro = it->first;
+			else macro = "";
+		}
+		break;
+	case '-': {
+			MacroMap::reverse_iterator it(tune->macros.find(macro));
+			if (macro == "") it = tune->macros.rbegin();
+			if (it != tune->macros.rend()) macro = it->first;
+			else macro = "";
+		}
+		break;
+
+
+
+	case 'S':
+		msg_win.say("Saving tune file... ");
+		if (!save_tune(*tune, tunefile)) msg_win.append("error.");
+		else msg_win.append("done.");
+
 		break;
 
 

@@ -4,6 +4,7 @@
 
 void Channel::init() {
 	_state = State::OFF;
+	_shift = 0x7ffff8;
 }
 
 void Channel::note_event(int note) {
@@ -19,7 +20,7 @@ void Channel::note_event(int note) {
 	}
 }
 
-void Channel::set_param_env(std::string name, Envelope env) {
+bool Channel::set_param_env(std::string name, Envelope env) {
 	static const std::map<std::string,ParamID> m {
 		{ "wave",			ParamID::WAVE			},
 		{ "offset",			ParamID::OFFSET			},
@@ -30,7 +31,10 @@ void Channel::set_param_env(std::string name, Envelope env) {
 		{ "vibratospeed",	ParamID::VIBRATO_SPEED	},
 		{ "vibratodepth",	ParamID::VIBRATO_DEPTH	},
 	};
-	_params[(int) m.at(name)].init(env);
+	auto it = m.find(name);
+	if (it == m.end()) return false;
+	_params[(int) it->second].init(env);
+	return true;
 }
 
 void Channel::param_change(ParamID id, float v) {
