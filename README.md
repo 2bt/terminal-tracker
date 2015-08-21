@@ -3,11 +3,10 @@ terminal-tracker
 
 
 Libs you'll need:
-
-	- libncurses
-	- libSDL
-	- libportmidi
-	- libsndfile
+- `libncurses`
+- `libSDL`
+- `libportmidi`
+- `libsndfile`
 
 Try it out:
 
