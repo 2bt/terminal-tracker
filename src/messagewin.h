@@ -8,7 +8,7 @@
 
 class MessageWin : public Win {
 public:
-	enum { MAX_MESSAGES = 4 };
+	enum { MAX_MESSAGES = 2 };
 
 	MessageWin() {
 		resize();
@@ -20,7 +20,6 @@ public:
 	}
 
 	virtual void draw() {
-//		set_style(NORMAL);
 		for (int y = 0; y < height; y++) {
 			move(top + height - y - 1, left);
 			if (y < (int) messages.size()) {
@@ -30,7 +29,6 @@ public:
 				printw("%-*s", width, "");
 			}
 		}
-//		set_style(DEFAULT);
 	}
 
 	void append(const char* format, ...) {

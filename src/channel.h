@@ -46,6 +46,10 @@ private:
 	float			_vibrato_speed;
 	float			_vibrato_depth;
 
+	float			_attack;
+	float			_decay;
+	float			_sustain;
+	float			_release;
 
 
 	enum class ParamID {
@@ -59,6 +63,9 @@ private:
 		VIBRATO_DEPTH,
 
 		ATTACK,
+		DECAY,
+		SUSTAIN,
+		RELEASE,
 
 		PARAM_COUNT
 	};

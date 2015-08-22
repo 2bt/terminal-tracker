@@ -13,27 +13,7 @@
 
 
 
-static Tune tune = {
-	{{}}, {},
-	{
-		{
-			"def", {
-				{},
-				{
-					{ "wave",			0 },
-					{ "offset",			0 },
-					{ "volume",			1 },
-					{ "panning",		0 },
-					{ "pulsewidth",		0.5 },
-					{ "resolution",		0 },
-					{ "vibratospeed",	0 },
-					{ "vibratodepth",	0 },
-				}
-			}
-		},
-	},
-	800, 8,
-};
+static Tune tune = { {}, {}, {}, 800, 8, };
 
 
 
@@ -69,10 +49,6 @@ int main(int argc, char** argv) {
 		}
 	}
 
-//	if (!save_tune(tune, "tune_")) {
-//		msg_win.say("error saving tune");
-//	}
-
 	atexit(&done);
 
 	initscr();
@@ -91,9 +67,9 @@ int main(int argc, char** argv) {
 
 	server.init(&tune);
 
-	bool running = true;
-	while (running) {
+	for (;;) {
 
+		// watch file
 		if (tunewatchfile) {
 			inotify_event event;
 			int r;
@@ -111,7 +87,7 @@ int main(int argc, char** argv) {
 			}
 		}
 
-
+		// gui
 		int ch = getch();
 		switch (ch) {
 		case ERR: break;

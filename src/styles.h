@@ -37,13 +37,14 @@ static const struct { int fg, bg, attr; } styles[] {
 	{ COLOR_WHITE,	19, 			0		},
 	{ COLOR_WHITE,	234, 			A_BOLD	},
 	{ COLOR_WHITE,	234, 			0		},
-	{ COLOR_WHITE,	18, 			A_BOLD	},
-	{ COLOR_WHITE,	18, 			0		},
+	{ COLOR_WHITE,	17, 			A_BOLD	},
+	{ COLOR_WHITE,	17, 			0		},
+
 	{ COLOR_WHITE,	23,			 	A_BOLD	},
 	{ COLOR_WHITE,	23,			 	0		},
 
 //	{ 17,			COLOR_BLACK,	A_BOLD	},
-	{ 235,			COLOR_BLACK,	0		},
+	{ 235,			COLOR_BLACK,	A_BOLD	},
 
 
 	{ COLOR_WHITE,	COLOR_GREEN, 	0		},

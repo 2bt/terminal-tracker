@@ -30,6 +30,10 @@ bool Channel::set_param_env(std::string name, Envelope env) {
 		{ "resolution",		ParamID::RESOLUTION		},
 		{ "vibratospeed",	ParamID::VIBRATO_SPEED	},
 		{ "vibratodepth",	ParamID::VIBRATO_DEPTH	},
+		{ "attack",			ParamID::ATTACK			},
+		{ "decay",			ParamID::DECAY			},
+		{ "sustain",		ParamID::SUSTAIN		},
+		{ "release",		ParamID::RELEASE		},
 	};
 	auto it = m.find(name);
 	if (it == m.end()) return false;
@@ -40,25 +44,24 @@ bool Channel::set_param_env(std::string name, Envelope env) {
 void Channel::param_change(ParamID id, float v) {
 	switch (id) {
 
-	case ParamID::OFFSET: _offset = v; break;
-
-	case ParamID::WAVE: _wave = (Wave) v; break;
-
-	case ParamID::PULSEWIDTH: _pulsewidth = fmodf(v, 1); break;
-
-	case ParamID::VOLUME: _volume = std::max(0.0f, v); break;
+	case ParamID::OFFSET:		_offset		= v; break;
+	case ParamID::WAVE:			_wave		= (Wave) v; break;
+	case ParamID::PULSEWIDTH:	_pulsewidth	= fmodf(v, 1); break;
+	case ParamID::VOLUME:		_volume		= std::max(0.0f, v); break;
 
 	case ParamID::PANNING:
 		_panning[0] = sqrtf(0.5 - clamp(v, -1.0f, 1.0f) * 0.5);
 		_panning[1] = sqrtf(0.5 + clamp(v, -1.0f, 1.0f) * 0.5);
 		break;
 
-	case ParamID::RESOLUTION: _resolution = std::max(0.0f, v); break;
+	case ParamID::RESOLUTION:		_resolution		= std::max(0.0f, v); break;
+	case ParamID::VIBRATO_SPEED:	_vibrato_speed	= v; break;
+	case ParamID::VIBRATO_DEPTH:	_vibrato_depth	= v; break;
 
-	case ParamID::VIBRATO_SPEED: _vibrato_speed = v; break;
-
-	case ParamID::VIBRATO_DEPTH: _vibrato_depth = v; break;
-
+	case ParamID::ATTACK:			_attack			= v; break;
+	case ParamID::DECAY:			_decay			= v; break;
+	case ParamID::SUSTAIN:			_sustain		= v; break;
+	case ParamID::RELEASE:			_release		= v; break;
 
 	default: break;
 	}
@@ -84,11 +87,6 @@ void Channel::tick() {
 }
 
 void Channel::add_mix(float frame[2]) {
-	float _attack = 0.001;
-	float _sustain = 0.5;
-	float _decay = 0.9999;
-	float _release = 0.999;
-
 
 	switch (_state) {
 	case State::OFF: return;

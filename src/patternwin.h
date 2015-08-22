@@ -44,9 +44,17 @@ private:
 	int scroll_y0_view;
 	int scroll_y1_view;
 
+	int mark_y_begin() const { return std::min(cursor_y1, mark_y); }
+	int mark_y_end() const {
+		auto& pat = tune->patterns[tune->table[cursor_y0][cursor_x]];
+		return std::min<int>(
+			std::max(cursor_y1, mark_y) + 1,
+			pat.size());
+	}
 
 	enum EditMode { OFF, PATTERN, MACRO, MARK_BLOCK, MARK_PATTERN };
 	EditMode		edit_mode = OFF;
+	bool			rename_pattern;
 	std::string		old_name;
 
 	Pattern			buffer_pat;

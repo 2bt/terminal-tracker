@@ -50,6 +50,40 @@ Server::~Server() {
 }
 
 
+void Server::play(int block, bool looping) {
+	_playing = true;
+	_blockloop = looping;
+	if (block < 0) return;
+
+	_block = block;
+	_frame = 0;
+	_tick = 0;
+	_row = 0;
+	static const Macro default_macro = {
+		{},
+		{
+			{ "wave",			0 },
+			{ "offset",			0 },
+			{ "volume",			1 },
+			{ "panning",		0 },
+			{ "pulsewidth",		0.5 },
+			{ "resolution",		0 },
+			{ "vibratospeed",	0 },
+			{ "vibratodepth",	0 },
+			{ "attack",			0.002 },
+			{ "decay",			0.99992 },
+			{ "sustain",		0.5 },
+			{ "release",		0.999 },
+		}
+	};
+	for (auto& chan : _channels) apply_macro(default_macro, chan);
+}
+void Server::stop() {
+	_playing = false;
+	for (auto& chan : _channels) chan.note_event(-1);
+}
+
+
 void Server::tick() {
 
 //	if (_midi && i == _midi_channel_nr) {
@@ -96,15 +130,18 @@ void Server::tick() {
 	}
 }
 
-bool Server::apply_macro(const std::string& macro_name, Channel& chan) const {
-	if (macro_name == "") return false;
-	auto it = _tune->macros.find(macro_name);
-	if (it == _tune->macros.end()) return false;
-	auto& macro = it->second;
+bool Server::apply_macro(const Macro& macro, Channel& chan) const {
 	int res = true;
 	for (auto& m : macro.parents) res &= apply_macro(m, chan);
 	for (auto& p : macro.envs) res &= chan.set_param_env(p.first, p.second);
 	return res;
+}
+
+bool Server::apply_macro(const std::string& macro_name, Channel& chan) const {
+	if (macro_name == "") return false;
+	auto it = _tune->macros.find(macro_name);
+	if (it == _tune->macros.end()) return false;
+	return apply_macro(it->second, chan);
 }
 
 void Server::mix(short* buffer, int length) {

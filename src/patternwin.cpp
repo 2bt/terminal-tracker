@@ -13,8 +13,10 @@ enum {
 	KEY_CTRL_UP = 566,
 	KEY_CTRL_RIGHT = 560,
 	KEY_CTRL_LEFT = 545,
+	KEY_CTRL_A = 1,
+	KEY_CTRL_I = 9,
+	KEY_CTRL_R = 18,
 	KEY_CTRL_X = 24,
-	KEY_CTRL_Y = 25,
 	KEY_CTRL_N = 14,
 	KEY_ESCAPE = 27,
 };
@@ -22,7 +24,7 @@ enum {
 
 void PatternWin::resize() {
 	width = COLS - left;
-	height = LINES - top - 4;
+	height = LINES - top - 2;
 	scroll_x_view = (width - 4) / (CHAN_CHAR_WIDTH + 1);
 
 	scroll_y0_view = 8;
@@ -158,8 +160,7 @@ void PatternWin::draw() {
 				if (i == server_row && tune->table[server_block][chan_nr] == pat_name) style = PL_NOTE;
 				if (i == cursor_y1) style = HL_NOTE;
 				if (edit_mode == MARK_PATTERN && chan_nr == cursor_x) {
-					if ((cursor_y1 <= i && i <= mark_y)
-					||	(cursor_y1 >= i && i >= mark_y)) style = MK_NOTE;
+					if (mark_y_begin() <= i && i < mark_y_end()) style = MK_NOTE;
 				}
 				if (i == cursor_y1 && cursor_x == chan_nr) style = (edit_mode == MACRO) ? ET_NOTE : CS_NOTE;
 				set_style(style);
@@ -255,15 +256,14 @@ void PatternWin::key(int ch) {
 		else if (ch == '\n') {
 			edit_mode = OFF;
 
-			// new pattern
-			if (old_name == "" && pat_name != "" && tune->patterns.count(pat_name) == 0) {
-				tune->patterns[pat_name].resize(16);
+			if (pat_name != "" && tune->patterns.count(pat_name) == 0) {
+				if (rename_pattern && old_name != "") { // rename pattern
+					tune->patterns[pat_name] = tune->patterns[old_name];
+				}
+				else tune->patterns[pat_name].resize(4); // new pattern
+				return;
 			}
 
-			// TODO: delete pattern, if unused
-			if (old_name != "" && pat_name != "") {
-
-			}
 		}
 		return;
 	}
@@ -308,39 +308,36 @@ void PatternWin::key(int ch) {
 			move_cursor(-1, 0, 0);
 			return;
 
-
+		// mark whole pattern
 		case 'V':
 			mark_y = 0;
 			cursor_y1 = std::max<int>(0, pat->size() - 1);
 			do_scroll();
 			return;
 
-		case 'y': {
-				// copy pattern to buffer
-				edit_mode = OFF;
-				buffer_pat.clear();
-				int i = std::min<int>(cursor_y1, mark_y);
-				int limit = std::max<int>(cursor_y1, mark_y) + 1;
-				while (i < limit && i < (int) pat->size()) {
-					buffer_pat.push_back(pat->at(i++));
-				}
-			}
-			return;
-
 		case KEY_ESCAPE:
 			edit_mode = OFF;
 			return;
 
+		// copy pattern to buffer
+		case 'y':
+		case KEY_BACKSPACE:
+			edit_mode = OFF;
+			buffer_pat.clear();
+			for (int i = mark_y_begin(); i < mark_y_end(); i++) {
+				buffer_pat.push_back(pat->at(i));
+				if (ch == KEY_BACKSPACE) pat->at(i) = Row();
+			}
+			return;
 
-		case KEY_BACKSPACE: {
-				edit_mode = OFF;
-				int i = std::min<int>(cursor_y1, mark_y);
-				int limit = std::max<int>(cursor_y1, mark_y);
-				while (i < limit && i < (int) pat->size()) {
-					auto& row = pat->at(i++);
-					row.note = 0;
-					for (auto& m : row.macros) m = "";
-				}
+		// transpose
+		case '>':
+		case '<':
+			for (int i = mark_y_begin(); i < mark_y_end(); i++) {
+				auto& row = pat->at(i);
+				if (row.note <= 0) continue;
+				if (ch == '>' && row.note < 120) row.note++;
+				if (ch == '<' && row.note > 1) row.note--;
 			}
 			return;
 
@@ -401,28 +398,52 @@ void PatternWin::key(int ch) {
 		}
 		return;
 
-	case 'X':
-		if (pat) pat->push_back({});
+	case 'X':	// delete row
+		if (pat) {
+			if ((int) pat->size() > std::max<int>(1, cursor_y1)) {
+				pat->erase(pat->begin() + cursor_y1);
+				if (cursor_y1 > (int) pat->size() - 1) move_cursor(0, 0, -1);
+			}
+		}
 		return;
-	case 'Y':
-		if (pat && pat->size() > 0) {
-			pat->pop_back();
-			cursor_y1 = std::max(0, std::min(cursor_y1, (int) pat->size() - 1));
+	case 'I':	// insert new row
+		if (pat) {
+			if ((int) pat->size() < cursor_y1 + 1) pat->resize(cursor_y1 + 1);
+			else pat->insert(pat->begin() + cursor_y1, Row());
+		}
+		return;
+	case 'A':	// append new row
+		if (pat) {
+			if ((int) pat->size() < cursor_y1 + 1) pat->resize(cursor_y1 + 1);
+			else pat->insert(pat->begin() + cursor_y1 + 1, Row());
 		}
 		return;
 
-	case KEY_CTRL_X:
-		tune->table.push_back({});
-		return;
-	case KEY_CTRL_Y:
-		if (tune->table.size() > 1) {
-			tune->table.pop_back();
-			cursor_y0 = std::min(cursor_y0, (int) tune->table.size() - 1);
+	case KEY_CTRL_X:	// delete block
+		if ((int) tune->table.size() > std::max<int>(1, cursor_y0)) {
+			tune->table.erase(tune->table.begin() + cursor_y0);
+			if (cursor_y0 > (int) tune->table.size() - 1) move_cursor(0, -1, 0);
 		}
+		return;
+	case KEY_CTRL_I:	// insert new block
+		if ((int) tune->table.size() < cursor_y0 + 1) tune->table.resize(cursor_y0 + 1);
+		else tune->table.insert(tune->table.begin() + cursor_y0, TableLine());
+		return;
+	case KEY_CTRL_A:	// append new block
+		if ((int) tune->table.size() < cursor_y0 + 1) tune->table.resize(cursor_y0 + 1);
+		else tune->table.insert(tune->table.begin() + cursor_y0 + 1, TableLine());
+		return;
+
+
+	case KEY_CTRL_R:
+		edit_mode = PATTERN;
+		rename_pattern = true;
+		old_name = pat_name;
 		return;
 
 	case KEY_CTRL_N:
 		edit_mode = PATTERN;
+		rename_pattern = false;
 		old_name = pat_name;
 		return;
 
@@ -434,10 +455,7 @@ void PatternWin::key(int ch) {
 		return;
 
 	case KEY_BACKSPACE:
-		if (row) {
-			row->note = 0;
-			for (auto& m : row->macros) m = "";
-		}
+		if (row) *row = Row();
 		return;
 
 	case '<':
@@ -472,20 +490,21 @@ void PatternWin::key(int ch) {
 		break;
 
 	case ' ':
-		server.set_playing(!server.get_playing(), cursor_y0);
+		if (server.is_playing()) server.stop();
+		else server.play(cursor_y0);
 		break;
 
 	case '\0':
-		server.set_playing(!server.get_playing(), cursor_y0, true);
+		if (server.is_playing()) server.stop();
+		else server.play(cursor_y0, true);
+		break;
 
 	default: break;
 	}
 
 
+	// note editing
 	if (edit_mode != OFF || !row) return;
-
-
-	// write note
 	if (ch < 32 || ch > 127) return;
 	if (ch == '^') {
 		row->note = -1;
