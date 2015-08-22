@@ -483,6 +483,7 @@ void PatternWin::key(int ch) {
 
 
 	case 'S':
+		strip_tune(*tune);
 		msg_win.say("Saving tune file... ");
 		if (!save_tune(*tune, tunefile)) msg_win.append("error.");
 		else msg_win.append("done.");

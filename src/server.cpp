@@ -31,17 +31,20 @@ void Server::init(Tune* tune) {
 
 	_playing = false;
 	_blockloop = false;
+	_block = 0;
 	_frame = 0;
 	_tick = 0;
 	_row = 0;
-	_block = 0;
+
 	_tune = tune;
 
-	_ticks_per_row.init(_tune->ticks_per_row);
 	init_channels();
+	set_ticks();
 
 	SDL_PauseAudio(0);
 }
+
+
 
 Server::~Server() {
 	SDL_CloseAudio();
@@ -88,6 +91,7 @@ void Server::play(int block, bool looping) {
 	_row = 0;
 
 	init_channels();
+	set_ticks();
 }
 void Server::stop() {
 	_playing = false;

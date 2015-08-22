@@ -66,3 +66,4 @@ struct Tune {
 
 bool save_tune(const Tune& tune, const char* name, bool all=true);
 bool load_tune(Tune& tune, const char* name);
+void strip_tune(Tune& tune);

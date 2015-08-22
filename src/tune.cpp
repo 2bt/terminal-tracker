@@ -1,4 +1,5 @@
 #include <string.h>
+#include <set>
 
 #include <pegtl.hh>
 
@@ -90,7 +91,6 @@ static std::string& strip_dots(std::string& w) {
 	while (!w.empty() && w.back() == '.') w.pop_back();
 	return w;
 }
-
 
 
 
@@ -198,6 +198,17 @@ bool load_tune(Tune& tune, const char* name) {
 			continue;
 		}
 
+		peg::MacroLineState state;
+		if (pegtl::parse<peg::MacroLine,peg::MacroAction>(s, "", state)) {
+			if (state.name == "ticks") tune.ticks_per_row = state.env;
+			else if (state.name == "frames") {
+				if (state.env.nodes.size() != 1
+				||	state.env.loop != -1) goto FAIL;
+				tune.frames_per_tick = state.env.nodes[0].value;
+			}
+			continue;
+		}
+
 
 		goto FAIL;
 	}
@@ -262,6 +273,13 @@ bool save_tune(const Tune& tune, const char* name, bool all) {
 
 
 	if (all) {
+
+		// timing
+		fprintf(f, "ticks =");
+		write_env(f, tune.ticks_per_row);
+		fprintf(f, "\nframes = %d\n", tune.frames_per_tick);
+
+		// macros
 		for (auto& p : tune.macros) {
 			fprintf(f, "MACRO %s", p.first.c_str());
 			auto& macro = p.second;
@@ -282,4 +300,19 @@ bool save_tune(const Tune& tune, const char* name, bool all) {
 	fclose(f);
 	return true;
 }
+
+
+void strip_tune(Tune& tune) {
+	std::set<std::string> pattern_set;
+
+	for (auto& line : tune.table) {
+		for (auto& p : line) pattern_set.insert(p);
+	}
+
+	for (auto& p : tune.patterns) {
+		if (pattern_set.count(p.first) == 0) tune.patterns.erase(p.first);
+	}
+}
+
+
 

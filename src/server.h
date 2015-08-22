@@ -12,6 +12,10 @@ public:
 	~Server();
 	void init(Tune* tune);
 
+	void set_ticks() {
+		_ticks_per_row.init(_tune->ticks_per_row);
+	}
+
 	void play(int block=0, bool looping=false);
 	void stop();
 	bool is_playing() const { return _playing; }

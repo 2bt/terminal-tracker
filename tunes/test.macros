@@ -1,3 +1,6 @@
+frames = 800
+ticks = 8
+
 MACRO kick
 	wave = 4 0
 	puslewidth = 0.5
@@ -16,7 +19,7 @@ MACRO bass
 	wave = 0
 	puslewidth = 0.2 0.3 0.4 0.5
 	offset = 7 0
-	volume = 1 1 1 | +-0.2
+	volume = 1 1 1 0.8 0.6 0.4 0.2
 
 
 MACRO pd
@@ -37,8 +40,12 @@ MACRO pd047 < pd
 
 
 MACRO lead
+	offset = 0
+	panning = 0.1
+	volume = 1
+	wave = 3 0
 	pulsewidth = 0.3
-	vibratodepth = 0 0 0 0 0 0 0 0 0.1 0.2 0.3
+	vibratodepth = 0 0 0 0 0 0 0.1 0.2 0.3
 	vibratospeed = 0.1
 
 
