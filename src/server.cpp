@@ -38,6 +38,7 @@ void Server::init(Tune* tune) {
 	_tune = tune;
 
 	_ticks_per_row.init(_tune->ticks_per_row);
+	init_channels();
 
 	SDL_PauseAudio(0);
 }
@@ -49,34 +50,44 @@ Server::~Server() {
 	Pm_Terminate();
 }
 
+void Server::init_channels() {
+	static const Macro default_macro = {
+		{},
+		{
+			{ "wave",			0		},
+			{ "offset",			0		},
+			{ "volume",			1		},
+			{ "panning",		0		},
+			{ "pulsewidth",		0.5		},
+			{ "resolution",		0		},
+			{ "vibratospeed",	0		},
+			{ "vibratodepth",	0		},
+			{ "attack",			0.002	},
+			{ "decay",			0.99992	},
+			{ "sustain",		0.5		},
+			{ "release",		0.999	},
+			{ "resonance",		0		},
+			{ "cutoff",			2000	},
+		}
+	};
+	for (auto& chan : _channels) {
+		chan.init();
+		apply_macro(default_macro, chan);
+	}
+}
 
 void Server::play(int block, bool looping) {
 	_playing = true;
 	_blockloop = looping;
+
 	if (block < 0) return;
 
 	_block = block;
 	_frame = 0;
 	_tick = 0;
 	_row = 0;
-	static const Macro default_macro = {
-		{},
-		{
-			{ "wave",			0 },
-			{ "offset",			0 },
-			{ "volume",			1 },
-			{ "panning",		0 },
-			{ "pulsewidth",		0.5 },
-			{ "resolution",		0 },
-			{ "vibratospeed",	0 },
-			{ "vibratodepth",	0 },
-			{ "attack",			0.002 },
-			{ "decay",			0.99992 },
-			{ "sustain",		0.5 },
-			{ "release",		0.999 },
-		}
-	};
-	for (auto& chan : _channels) apply_macro(default_macro, chan);
+
+	init_channels();
 }
 void Server::stop() {
 	_playing = false;
@@ -107,7 +118,7 @@ void Server::tick() {
 //	}
 
 	// tick server
-	if (_tick == 0) { // new row
+	if (_playing && _tick == 0) { // new row
 		_ticks_per_row.tick();
 	}
 
@@ -115,8 +126,8 @@ void Server::tick() {
 	auto& line = _tune->table[_block];
 	int i = 0;
 	for (auto& chan : _channels) {
-		if (_tick == 0) {
-			auto& pat_name = line[i++];
+		if (_playing && _tick == 0) {
+			auto& pat_name = line[i];
 			if (_tune->patterns.count(pat_name)) {
 				auto& pat = _tune->patterns[pat_name];
 				if (_row < (int) pat.size()) {
@@ -127,6 +138,7 @@ void Server::tick() {
 			}
 		}
 		chan.tick();
+		i++;
 	}
 }
 
@@ -147,10 +159,10 @@ bool Server::apply_macro(const std::string& macro_name, Channel& chan) const {
 void Server::mix(short* buffer, int length) {
 	for (int i = 0; i < length; i += 2) {
 
-		if (_playing) {
-			if (_frame == 0) tick();
-			if (++_frame >= _tune->frames_per_tick) {
-				_frame = 0;
+		if (_frame == 0) tick();
+		if (++_frame >= _tune->frames_per_tick) {
+			_frame = 0;
+				if (_playing) {
 				if (++_tick >= _ticks_per_row.val()) {
 					_tick = 0;
 					if (++_row >= get_max_rows(_tune->table[_block], _tune->patterns)) {

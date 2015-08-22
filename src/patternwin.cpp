@@ -14,7 +14,7 @@ enum {
 	KEY_CTRL_RIGHT = 560,
 	KEY_CTRL_LEFT = 545,
 	KEY_CTRL_A = 1,
-	KEY_CTRL_I = 9,
+	KEY_CTRL_O = 15,
 	KEY_CTRL_R = 18,
 	KEY_CTRL_X = 24,
 	KEY_CTRL_N = 14,
@@ -39,7 +39,7 @@ void PatternWin::draw() {
 	int server_block = server.get_block();
 
 
-	set_style(FRAME);
+	set_style(S_FRAME);
 	mvprintw(top, left, "   ");
 	addch(ACS_ULCORNER);
 	mvprintw(top + 1, left, "   ");
@@ -52,12 +52,12 @@ void PatternWin::draw() {
 		move(top + r + 3, left);
 		addch(ACS_VLINE);
 		if (r + scroll_y0 < (int) tune->table.size()) {
-			set_style(r == cursor_y0 ? HL_NORMAL : NORMAL);
+			set_style(r == cursor_y0 ? S_HL_NORMAL : S_NORMAL);
 			printw("%02X", r + scroll_y0);
-			set_style(FRAME);
+			set_style(S_FRAME);
 		}
 		else printw("  ");
-		set_style(FRAME);
+		set_style(S_FRAME);
 		addch(ACS_VLINE);
 	}
 
@@ -76,12 +76,12 @@ void PatternWin::draw() {
 		move(y1 + r + 1, left);
 		addch(ACS_VLINE);
 		if (i < max_rows) {
-			set_style(i == cursor_y1 ? HL_NORMAL : NORMAL);
+			set_style(i == cursor_y1 ? S_HL_NORMAL : S_NORMAL);
 			printw("%02X", i);
-			set_style(FRAME);
+			set_style(S_FRAME);
 		}
 		else printw("  ");
-		set_style(FRAME);
+		set_style(S_FRAME);
 		addch(ACS_VLINE);
 	}
 
@@ -107,12 +107,12 @@ void PatternWin::draw() {
 		move(top + 1, x);
 
 		int level = clamp(server.get_chan_level(chan_nr), 0.0f, 1.0f) * (CHAN_CHAR_WIDTH - 1);
-		set_style(LEVEL);
+		set_style(S_LEVEL);
 		addchs(' ', level);
-		set_style(NORMAL);
+		set_style(S_NORMAL);
 		addchs(' ', CHAN_CHAR_WIDTH - 1 - level);
 		printw("%X", chan_nr);
-		set_style(FRAME);
+		set_style(S_FRAME);
 		addch(ACS_VLINE);
 		move(top + 2, x);
 		addchs(ACS_HLINE, CHAN_CHAR_WIDTH);
@@ -130,10 +130,10 @@ void PatternWin::draw() {
 			move(top + r + 3, x);
 			if (i < (int) tune->table.size()) {
 
-				int style = MACRO;
-				if (i == server_block) style = PL_MACRO;
-				if (i == cursor_y0) style = HL_MACRO;
-				if (i == cursor_y0 && cursor_x == chan_nr) style = (edit_mode == PATTERN) ? ET_MACRO : CS_MACRO;
+				int style = S_MACRO;
+				if (i == server_block) style = S_PL_MACRO;
+				if (i == cursor_y0) style = S_HL_MACRO;
+				if (i == cursor_y0 && cursor_x == chan_nr) style = (edit_mode == PATTERN) ? S_ET_MACRO : S_CS_MACRO;
 				set_style(style);
 
 				auto pn = tune->table[i][chan_nr];
@@ -141,10 +141,10 @@ void PatternWin::draw() {
 				addchs(pn == "" ? ' ' : '.', CHAN_CHAR_WIDTH - pn.size());
 			}
 			else {
-				set_style(FRAME);
+				set_style(S_FRAME);
 				addchs(' ', CHAN_CHAR_WIDTH);
 			}
-			set_style(FRAME);
+			set_style(S_FRAME);
 			addch(ACS_VLINE);
 		}
 
@@ -156,13 +156,13 @@ void PatternWin::draw() {
 			if (pat && i < (int) pat->size()) {
 				auto& row = pat->at(i);
 
-				int style = NOTE;
-				if (i == server_row && tune->table[server_block][chan_nr] == pat_name) style = PL_NOTE;
-				if (i == cursor_y1) style = HL_NOTE;
+				int style = S_NOTE;
+				if (i == server_row && tune->table[server_block][chan_nr] == pat_name) style = S_PL_NOTE;
+				if (i == cursor_y1) style = S_HL_NOTE;
 				if (edit_mode == MARK_PATTERN && chan_nr == cursor_x) {
-					if (mark_y_begin() <= i && i < mark_y_end()) style = MK_NOTE;
+					if (mark_y_begin() <= i && i < mark_y_end()) style = S_MK_NOTE;
 				}
-				if (i == cursor_y1 && cursor_x == chan_nr) style = (edit_mode == MACRO) ? ET_NOTE : CS_NOTE;
+				if (i == cursor_y1 && cursor_x == chan_nr) style = (edit_mode == MACRO) ? S_ET_NOTE : S_CS_NOTE;
 				set_style(style);
 
 
@@ -184,20 +184,20 @@ void PatternWin::draw() {
 				}
 			}
 			else {
-				set_style(i == cursor_y1 ? cursor_x == chan_nr ? CS_NOTE : HL_NOTE : FRAME);
+				set_style(i == cursor_y1 ? cursor_x == chan_nr ? S_CS_NOTE : S_HL_NOTE : S_FRAME);
 				addchs(' ', CHAN_CHAR_WIDTH);
 			}
-			set_style(FRAME);
+			set_style(S_FRAME);
 			addch(ACS_VLINE);
 		}
 
-		set_style(FRAME);
+		set_style(S_FRAME);
 		move(top + height - 1, x);
 		addchs(ACS_HLINE, CHAN_CHAR_WIDTH);
 		addch(chan_nr < chan_limit - 1 ? ACS_BTEE : ACS_LRCORNER);
 
 	}
-	set_style(DEFAULT);
+	set_style(S_DEFAULT);
 	for (int r = 0; r < height; r++) {
 		move(top + r, x);
 		addchs(' ', std::max(0, width - x));
@@ -406,7 +406,7 @@ void PatternWin::key(int ch) {
 			}
 		}
 		return;
-	case 'I':	// insert new row
+	case 'O':	// insert new row
 		if (pat) {
 			if ((int) pat->size() < cursor_y1 + 1) pat->resize(cursor_y1 + 1);
 			else pat->insert(pat->begin() + cursor_y1, Row());
@@ -425,7 +425,7 @@ void PatternWin::key(int ch) {
 			if (cursor_y0 > (int) tune->table.size() - 1) move_cursor(0, -1, 0);
 		}
 		return;
-	case KEY_CTRL_I:	// insert new block
+	case KEY_CTRL_O:	// insert new block
 		if ((int) tune->table.size() < cursor_y0 + 1) tune->table.resize(cursor_y0 + 1);
 		else tune->table.insert(tune->table.begin() + cursor_y0, TableLine());
 		return;
@@ -508,6 +508,7 @@ void PatternWin::key(int ch) {
 	if (ch < 32 || ch > 127) return;
 	if (ch == '^') {
 		row->note = -1;
+		server.play_row(cursor_x, *row);
 		return;
 	}
 	static const char* t1 = "ysxdcvgbhnjm,";
@@ -519,6 +520,7 @@ void PatternWin::key(int ch) {
 	if (a) {
 		row->note = n + 1 + octave * 12;
 		row->macros[0] = macro;
+		server.play_row(cursor_x, *row);
 	}
 }
 

@@ -21,6 +21,12 @@ public:
 
 	float get_chan_level(int i) const { return _channels[i].get_level(); }
 
+	void play_row(int i, const Row& row) {
+		auto& chan = _channels[i];
+		if (row.note != 0) chan.note_event(row.note);
+		for (auto& m : row.macros) apply_macro(m, chan);
+	}
+
 private:
 	static void audio_callback(void* userdata, unsigned char* stream, int len) {
 		((Server*) userdata)->mix((short*) stream, len / 2);
@@ -29,6 +35,7 @@ private:
 	void tick();
 	bool apply_macro(const Macro& macro, Channel& chan) const;
 	bool apply_macro(const std::string& macro_name, Channel& chan) const;
+	void init_channels();
 
 	SNDFILE*			_log;
 	PortMidiStream*		_midi;

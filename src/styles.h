@@ -1,27 +1,27 @@
 #pragma once
 
 enum Style {
-	DEFAULT,
-	NORMAL,
-	HL_NORMAL,
+	S_DEFAULT,
+	S_NORMAL,
+	S_HL_NORMAL,
 
-	NOTE,
-	MACRO,
-	HL_NOTE,
-	HL_MACRO,
-	CS_NOTE,
-	CS_MACRO,
-	PL_NOTE,
-	PL_MACRO,
-	MK_NOTE,
-	MK_MACRO,
+	S_NOTE,
+	S_MACRO,
+	S_HL_NOTE,
+	S_HL_MACRO,
+	S_CS_NOTE,
+	S_CS_MACRO,
+	S_PL_NOTE,
+	S_PL_MACRO,
+	S_MK_NOTE,
+	S_MK_MACRO,
 
-	ET_NOTE,
-	ET_MACRO,
+	S_ET_NOTE,
+	S_ET_MACRO,
 
-	FRAME,
+	S_FRAME,
 
-	LEVEL,
+	S_LEVEL,
 };
 
 static const struct { int fg, bg, attr; } styles[] {
@@ -30,20 +30,19 @@ static const struct { int fg, bg, attr; } styles[] {
 	{ COLOR_WHITE,	233, 			0		},
 
 	{ COLOR_WHITE,	232, 			A_BOLD	},
-	{ COLOR_WHITE,	232, 			0		},
+	{ 11,			232, 			0		},
+
 	{ COLOR_WHITE,	235, 			A_BOLD	},
-	{ COLOR_WHITE,	235, 			0		},
-	{ COLOR_WHITE,	19, 			A_BOLD	},
-	{ COLOR_WHITE,	19, 			0		},
+	{ 11,			235, 			0		},
+	{ COLOR_WHITE,	23, 			A_BOLD	},
+	{ 11,			23, 			0		},
 	{ COLOR_WHITE,	234, 			A_BOLD	},
-	{ COLOR_WHITE,	234, 			0		},
-	{ COLOR_WHITE,	17, 			A_BOLD	},
-	{ COLOR_WHITE,	17, 			0		},
+	{ 11,			234, 			0		},
+	{ COLOR_WHITE,	22, 			A_BOLD	},
+	{ 11,			22, 			0		},
+	{ COLOR_WHITE,	22,			 	A_BOLD	},
+	{ 11,			22,			 	0		},
 
-	{ COLOR_WHITE,	23,			 	A_BOLD	},
-	{ COLOR_WHITE,	23,			 	0		},
-
-//	{ 17,			COLOR_BLACK,	A_BOLD	},
 	{ 235,			COLOR_BLACK,	A_BOLD	},
 
 

@@ -1,8 +1,8 @@
-#include <cmath>
 #include "channel.h"
 
 
 void Channel::init() {
+	_filter.init();
 	_state = State::OFF;
 	_shift = 0x7ffff8;
 }
@@ -34,12 +34,15 @@ bool Channel::set_param_env(std::string name, Envelope env) {
 		{ "decay",			ParamID::DECAY			},
 		{ "sustain",		ParamID::SUSTAIN		},
 		{ "release",		ParamID::RELEASE		},
+		{ "cutoff",			ParamID::CUTOFF			},
+		{ "resonance",		ParamID::RESONANCE		},
 	};
 	auto it = m.find(name);
 	if (it == m.end()) return false;
 	_params[(int) it->second].init(env);
 	return true;
 }
+
 
 void Channel::param_change(ParamID id, float v) {
 	switch (id) {
@@ -63,15 +66,21 @@ void Channel::param_change(ParamID id, float v) {
 	case ParamID::SUSTAIN:			_sustain		= v; break;
 	case ParamID::RELEASE:			_release		= v; break;
 
+	case ParamID::RESONANCE:
+		_resonance = v;
+		if (v > 0) _filter.set(_cutoff, _resonance);
+		break;
+	case ParamID::CUTOFF:
+		_cutoff = std::max<float>(10, v);
+		_filter.set(_cutoff, _resonance);
+		break;
+
 	default: break;
 	}
 
 }
 
 void Channel::tick() {
-
-
-
 	int i = 0;
 	for (auto& p : _params) {
 		if (p.tick()) param_change((ParamID) i, p.val());
@@ -81,7 +90,6 @@ void Channel::tick() {
 	// vibrato
 	_vibrato_phase = fmodf(_vibrato_phase + _vibrato_speed, 1);
 	float vib = sinf(_vibrato_phase * 2 * M_PI) * _vibrato_depth;
-
 	_speed = powf(2, (_note + _offset + vib - 57) * (1 / 12.0)) * (440.0 / MIXRATE);
 
 }
@@ -153,6 +161,9 @@ void Channel::add_mix(float frame[2]) {
 	if (_resolution > 0) amp = floorf(amp * _resolution) / _resolution;
 
 	amp *= _level;
+
+	if (_resonance > 0) amp = _filter.mix(amp);
+
 	amp *= _volume;
 
 	frame[0] += amp * _panning[0];

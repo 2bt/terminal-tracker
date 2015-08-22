@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include "param.h"
 
 
@@ -8,6 +9,34 @@ T clamp(const T& n, const T& a, const T& b) {
 	return std::max(a, std::min(n, b));
 }
 
+
+class LPF {
+public:
+	void init() {
+		_pos = 0;
+		_speed = 0;
+	}
+
+	void set(float freq, float reso) {
+		float w = 2 * M_PI * freq / MIXRATE;
+		float q = 1 - w / (2 * (reso + 0.5 / (1 + w)) + w - 2);
+		_r = q * q;
+		_c = _r + 1 - 2 * cosf(w) * q;
+	}
+	float mix(float a) {
+		_speed += (a - _pos) * _c;
+		_pos += _speed;
+		_speed *= _r;
+		return _pos;
+	}
+
+private:
+	float _r;
+	float _c;
+
+	float _pos;
+	float _speed;
+};
 
 
 class Channel {
@@ -51,6 +80,10 @@ private:
 	float			_sustain;
 	float			_release;
 
+	float			_cutoff;
+	float			_resonance;
+	LPF				_filter;
+
 
 	enum class ParamID {
 		WAVE,
@@ -66,6 +99,10 @@ private:
 		DECAY,
 		SUSTAIN,
 		RELEASE,
+
+		FILTER,
+		CUTOFF,
+		RESONANCE,
 
 		PARAM_COUNT
 	};
