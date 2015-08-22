@@ -202,10 +202,12 @@ bool load_tune(Tune& tune, const char* name) {
 		goto FAIL;
 	}
 	fclose(f);
+	if (tune.table.empty()) tune.table.push_back({});
 	return true;
 
 FAIL:
 	fclose(f);
+	if (tune.table.empty()) tune.table.push_back({});
 	return false;
 }
 

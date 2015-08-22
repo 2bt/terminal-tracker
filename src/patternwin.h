@@ -24,6 +24,7 @@ public:
 
 private:
 	void do_scroll();
+	void move_cursor(int dx, int dy0, int dy1);
 
 
 	int top = 1;
@@ -34,6 +35,8 @@ private:
 	int cursor_x = 0;
 	int cursor_y0 = 0;
 	int cursor_y1 = 0;
+	int mark_x;
+	int mark_y;
 	int scroll_x = 0;
 	int scroll_y0 = 0;
 	int scroll_y1 = 0;
@@ -42,10 +45,11 @@ private:
 	int scroll_y1_view;
 
 
-	enum EditMode { OFF, PATTERN, MACRO };
+	enum EditMode { OFF, PATTERN, MACRO, MARK_BLOCK, MARK_PATTERN };
 	EditMode		edit_mode = OFF;
 	std::string		old_name;
 
+	Pattern			buffer_pat;
 
 	std::string		macro = "";
 	int				octave = 3;

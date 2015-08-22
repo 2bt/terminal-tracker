@@ -12,6 +12,20 @@ public:
 	~Server();
 	void init(Tune* tune);
 
+	void set_playing(bool p, int block=0, bool l=false) {
+		if (p == false) {
+			for (auto& chan : _channels) chan.note_event(-1);
+		} else {
+			_frame = 0;
+			_tick = 0;
+			_row = 0;
+			_block = block;
+		}
+		_playing = p;
+		_blockloop = l;
+	}
+	bool get_playing() const { return _playing; }
+
 	int get_row()	const { return _row; }
 	int get_block()	const { return _block; }
 
@@ -25,14 +39,16 @@ private:
 	void tick();
 	bool apply_macro(const std::string& macro_name, Channel& chan) const;
 
-	bool 				_playing = false;
 	SNDFILE*			_log;
 	PortMidiStream*		_midi;
 
-	int		_frame;
-	int		_tick;
-	int		_row;
-	int		_block;
+	volatile bool 	_playing;
+	volatile bool	_blockloop;
+	volatile int	_frame;
+	volatile int	_tick;
+	volatile int	_row;
+	volatile int	_block;
+
 
 	Param	_ticks_per_row;
 

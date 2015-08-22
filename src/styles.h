@@ -33,17 +33,17 @@ static const struct { int fg, bg, attr; } styles[] {
 	{ COLOR_WHITE,	232, 			0		},
 	{ COLOR_WHITE,	235, 			A_BOLD	},
 	{ COLOR_WHITE,	235, 			0		},
-	{ COLOR_WHITE,	18, 			A_BOLD	},
-	{ COLOR_WHITE,	18, 			0		},
+	{ COLOR_WHITE,	19, 			A_BOLD	},
+	{ COLOR_WHITE,	19, 			0		},
 	{ COLOR_WHITE,	234, 			A_BOLD	},
 	{ COLOR_WHITE,	234, 			0		},
-	{ COLOR_WHITE,	58, 			A_BOLD	},
-	{ COLOR_WHITE,	58, 			0		},
+	{ COLOR_WHITE,	18, 			A_BOLD	},
+	{ COLOR_WHITE,	18, 			0		},
+	{ COLOR_WHITE,	23,			 	A_BOLD	},
+	{ COLOR_WHITE,	23,			 	0		},
 
-	{ COLOR_WHITE,	21,			 	A_BOLD	},
-	{ COLOR_WHITE,	21,			 	0		},
-
-	{ 17,			COLOR_BLACK,	A_BOLD	},
+//	{ 17,			COLOR_BLACK,	A_BOLD	},
+	{ 235,			COLOR_BLACK,	0		},
 
 
 	{ COLOR_WHITE,	COLOR_GREEN, 	0		},
@@ -56,5 +56,5 @@ inline void init_styles() {
 }
 
 inline void set_style(int i) { attrset(COLOR_PAIR(i) | styles[i].attr); }
-inline void addchs(chtype c, int n) { while (n--) addch(c); }
+inline void addchs(chtype c, int n) { while (n-- > 0) addch(c); }
 

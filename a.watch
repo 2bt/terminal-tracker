@@ -1,28 +1,28 @@
 
-MACRO bass < default
+MACRO bass < def
 
 
-MACRO kick < default
+MACRO kick < def
 	wave = 4 0
 	puslewidth = 0.5
 	offset = 60 10 6 0 -4 -5
 	volume = 1 1 1 1 | +-0.3
 
 
-MACRO snare < default
+MACRO snare < def
 	wave = 4 0 0 0 4
 	puslewidth = 0.5
 	offset = 40 12 4 0 70
 	volume = 1 1 1 1 1 | +-0.08
 
-MACRO bass < default
+MACRO bass < def
 	panning = -0.1
 	wave = 0
 	puslewidth = 0.2 0.3 0.4 0.5
 	offset = 7 0
 	volume = 1 1 1 | +-0.2
 
-MACRO pd < default
+MACRO pd < def
 	panning = | 0.1 0.3 -0.3
 	wave = 1
 	resolution = 20
@@ -35,7 +35,14 @@ MACRO pd037 < pd
 MACRO pd047 < pd
 	offset = | 0 4 7 12
 
-MACRO lead < default
+MACRO lead < def
 	pulsewidth = 0.3
 	vibratodepth = 0 0 0 0 0 0 0 0 0.1 0.2 0.3
 	vibratospeed = 0.1
+
+
+MACRO fx < def
+	wave = | 4 4 3
+	offset = 0 | +12 +0 +-12.2
+	panning = 0.5 | +-0.01
+	volume = 1 | +-0.01

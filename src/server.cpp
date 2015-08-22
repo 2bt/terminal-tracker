@@ -29,11 +29,12 @@ void Server::init(Tune* tune) {
 	};
 	SDL_OpenAudio(&spec, &spec);
 
+	_playing = false;
+	_blockloop = false;
 	_frame = 0;
 	_tick = 0;
 	_row = 0;
 	_block = 0;
-	_playing = true;
 	_tune = tune;
 
 	_ticks_per_row.init(_tune->ticks_per_row);
@@ -117,12 +118,11 @@ void Server::mix(short* buffer, int length) {
 					_tick = 0;
 					if (++_row >= get_max_rows(_tune->table[_block], _tune->patterns)) {
 						_row = 0;
-						if (++_block >= (int) _tune->table.size()) _block = 0;
+						if (!_blockloop && ++_block >= (int) _tune->table.size()) _block = 0;
 					}
 				}
 			}
 		}
-
 		float frame[2] = { 0, 0 };
 		for (auto& chan : _channels) chan.add_mix(frame);
 		buffer[i + 0] = clamp((int) (frame[0] * 6000), -32768, 32768);

@@ -14,10 +14,10 @@
 
 
 static Tune tune = {
-	{}, {},
+	{{}}, {},
 	{
 		{
-			"default", {
+			"def", {
 				{},
 				{
 					{ "wave",			0 },
