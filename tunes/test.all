@@ -166,3 +166,41 @@ PATTERN pad01
  === ..... .....
  G-4 pd037 .....
  === ..... .....
+MACRO bass
+ offset           = 7 0
+ panning          = -0.1
+ puslewidth       = 0.2 0.3 0.4 0.5
+ volume           = 1 1 1 | +-0.2
+ wave             = 0
+MACRO fx
+ offset           = 0 | +12 +0 +-12.2
+ panning          = 0.5 | +-0.01
+ volume           = 1 | +-0.01
+ wave             = | 4 4 3
+MACRO kick
+ offset           = 60 10 6 0 -4 -5
+ puslewidth       = 0.5
+ volume           = 1 1 1 1 | +-0.3
+ wave             = 4 0
+MACRO lead
+ pulsewidth       = 0.3
+ vibratodepth     = 0 0 0 0 0 0 0 0 0.1 0.2 0.3
+ vibratospeed     = 0.1
+MACRO pd
+ attack           = 0.001
+ decay            = 0.9999
+ panning          = -0.2 | +0.02 +0.3 +-0.3
+ pulsewidth       = 0.01 | +0.02
+ release          = 0.9999
+ resolution       = 20
+ wave             = 1
+MACRO pd037 < pd
+ offset           = | 0 0 3 3 7 7 12 12
+MACRO pd047 < pd
+ offset           = | 0 0 4 4 7 7 12 12
+ panning          = 0.3 | +-0.02 +-0.3 +0.3
+MACRO snare
+ offset           = 40 12 4 0 70
+ puslewidth       = 0.5
+ volume           = 1 1 1 1 1 | +-0.08
+ wave             = 4 0 0 0 4

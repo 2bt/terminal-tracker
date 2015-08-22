@@ -1,7 +1,6 @@
 terminal-tracker
 ================
 
-
 Libs you'll need:
 - `libncurses`
 - `libSDL`
@@ -12,4 +11,4 @@ Try it out:
 
 	$ git submodule init
 	$ make
-	$ ./tt a.tune a.watch
+	$ ./tt tunes/test.all # then press space to play
