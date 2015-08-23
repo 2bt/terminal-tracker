@@ -36,4 +36,8 @@ MACRO pad
 	pulsewidth = 0.3
 
 
-
+MACRO ld
+	wave = 0
+	offset = 7 0
+	volume = 1
+	pulsewith = 0.4

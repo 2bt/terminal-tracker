@@ -23,13 +23,15 @@ public:
 	int get_row()	const { return _row; }
 	int get_block()	const { return _block; }
 
-	float get_chan_level(int i) const { return _channels[i].get_level(); }
+	float get_chan_level(int chan_nr) const { return _channels[chan_nr].get_level(); }
 
-	void play_row(int i, const Row& row) {
-		auto& chan = _channels[i];
+	void play_row(int chan_nr, const Row& row) {
+		auto& chan = _channels[chan_nr];
 		if (row.note != 0) chan.note_event(row.note);
 		for (auto& m : row.macros) apply_macro(m, chan);
 	}
+
+	Row* get_nearest_row(int chan_nr);
 
 private:
 	static void audio_callback(void* userdata, unsigned char* stream, int len) {

@@ -46,13 +46,6 @@ typedef std::map<std::string,Macro>				MacroMap;
 typedef std::array<std::string,CHANNEL_COUNT>	TableLine;
 
 
-inline int get_max_rows(const TableLine& line, const PatternMap& patterns) {
-	int m = 0;
-	for (auto& pn : line) {
-		if (patterns.count(pn) > 0) m = std::max(m, (int) patterns.at(pn).size());
-	}
-	return m;
-}
 
 
 struct Tune {
@@ -62,6 +55,16 @@ struct Tune {
 	int							frames_per_tick;
 	Envelope					ticks_per_row;
 };
+
+
+inline int get_max_rows(const Tune& tune, int block) {
+	int m = 0;
+	for (auto& pn : tune.table[block]) {
+		auto it = tune.patterns.find(pn);
+		if (it != tune.patterns.end()) m = std::max(m, (int) it->second.size());
+	}
+	return m;
+}
 
 
 bool save_tune(const Tune& tune, const char* name, bool all=true);

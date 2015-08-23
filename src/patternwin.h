@@ -6,7 +6,7 @@
 class PatternWin : public Win {
 public:
 	enum {
-		PATTERN_CHAR_WIDTH = 10,
+		PATTERN_CHAR_WIDTH = 9,
 		MACRO_CHAR_WIDTH = 5,
 		CHAN_CHAR_WIDTH = 3 + MACROS_PER_ROW * (MACRO_CHAR_WIDTH + 1)
 	};
@@ -52,8 +52,15 @@ private:
 			pat.size());
 	}
 
-	enum EditMode { OFF, PATTERN, MACRO, MARK_BLOCK, MARK_PATTERN };
-	EditMode		edit_mode = OFF;
+	void key_pattern_name(int ch);
+	void key_macro_name(int ch);
+	void key_mark_pattern(int ch);
+	void key_record(int ch);
+	void key_normal(int ch);
+	void key_rec_norm_common(int ch);
+	enum EditMode { EM_NORMAL, EM_RECORD, EM_PATTERN_NAME, EM_MACRO_NAME, EM_MARK_PATTERN };
+
+	EditMode		edit_mode = EM_NORMAL;
 	bool			rename_pattern;
 	std::string		old_name;
 

@@ -93,33 +93,50 @@ void Server::play(int block, bool looping) {
 	init_channels();
 	set_ticks();
 }
+
 void Server::stop() {
 	_playing = false;
 	for (auto& chan : _channels) chan.note_event(-1);
 }
 
+Row* Server::get_nearest_row(int chan_nr) {
+	int row = _row;
+	int block = _block;
+	if (_tick >= _ticks_per_row.val() / 2) {
+		if (++row >= get_max_rows(*_tune, _block)) {
+			row = 0;
+			if (!_blockloop && ++block >= (int) _tune->table.size()) block = 0;
+		}
+	}
+	auto& pn = _tune->table[block][chan_nr];
+	auto it = _tune->patterns.find(pn);
+	if (it == _tune->patterns.end()) return nullptr;
+	auto& pat = it->second;
+	if (row >= (int) pat.size()) return nullptr;
+	return &pat[row];
+}
+
 
 void Server::tick() {
 
-//	if (_midi && i == _midi_channel_nr) {
-//		struct { unsigned char type, val, x, y; } event;
-//		for (;;) {
-//			int l = Pm_Read(_midi, (PmEvent*) &event, 1);
-//			if (!l) break;
-//
-//			static int last_note = 0;
-//			string row;
-//			if (event.type == 128 && event.val == last_note) row = "---";
-//			else if (event.type == 144) {
-//				int i = event.val;
-//				row	= string(1, "ccddeffggaab"[i%12])
-//					+ string(1, "-#-#--#-#-#-"[i%12])
-//					+ string(1, '0' + i/12);
-//				last_note = event.val;
-//			}
-//			if (!row.empty()) _channels[i].set_row_commands({ { "note", row } });
-//		}
-//	}
+	// rough and ready midi support
+	if (_midi) {
+		struct { unsigned char type, val, x, y; } event;
+		for (;;) {
+			int l = Pm_Read(_midi, (PmEvent*) &event, 1);
+			if (!l) break;
+
+			static int last_note = 0;
+			if (event.type == 128 && event.val == last_note) {
+				play_row(15, { -1 });
+			}
+			else if (event.type == 144) {
+				play_row(15, { event.val + 1, { "midi" }});
+				last_note = event.val;
+			}
+		}
+	}
+
 
 	// tick server
 	if (_playing && _tick == 0) { // new row
@@ -131,9 +148,9 @@ void Server::tick() {
 	int i = 0;
 	for (auto& chan : _channels) {
 		if (_playing && _tick == 0) {
-			auto& pat_name = line[i];
-			if (_tune->patterns.count(pat_name)) {
-				auto& pat = _tune->patterns[pat_name];
+			auto it = _tune->patterns.find(line[i]);
+			if (it != _tune->patterns.end()) {
+				auto& pat = it->second;
 				if (_row < (int) pat.size()) {
 					auto& row = pat[_row];
 					if (row.note != 0) chan.note_event(row.note);
@@ -169,7 +186,7 @@ void Server::mix(short* buffer, int length) {
 				if (_playing) {
 				if (++_tick >= _ticks_per_row.val()) {
 					_tick = 0;
-					if (++_row >= get_max_rows(_tune->table[_block], _tune->patterns)) {
+					if (++_row >= get_max_rows(*_tune, _block)) {
 						_row = 0;
 						if (!_blockloop && ++_block >= (int) _tune->table.size()) _block = 0;
 					}

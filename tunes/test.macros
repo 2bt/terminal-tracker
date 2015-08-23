@@ -48,6 +48,7 @@ MACRO lead
 	vibratodepth = 0 0 0 0 0 0 0.1 0.2 0.3
 	vibratospeed = 0.1
 
+MACRO midi < lead
 
 MACRO fx
 	wave = | 4 4 3

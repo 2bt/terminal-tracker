@@ -90,7 +90,7 @@ void Channel::tick() {
 	// vibrato
 	_vibrato_phase = fmodf(_vibrato_phase + _vibrato_speed, 1);
 	float vib = sinf(_vibrato_phase * 2 * M_PI) * _vibrato_depth;
-	_speed = powf(2, (_note + _offset + vib - 57) * (1 / 12.0)) * (440.0 / MIXRATE);
+	_speed = powf(2, (_note + _offset + vib - 58) * (1 / 12.0)) * (440.0 / MIXRATE);
 
 }
 
@@ -159,11 +159,9 @@ void Channel::add_mix(float frame[2]) {
 	}
 
 	if (_resolution > 0) amp = floorf(amp * _resolution) / _resolution;
-
-	amp *= _level;
-
 	if (_resonance > 0) amp = _filter.mix(amp);
 
+	amp *= _level;
 	amp *= _volume;
 
 	frame[0] += amp * _panning[0];

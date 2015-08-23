@@ -260,6 +260,7 @@ MACRO lead
  vibratospeed     = 0.1
  volume           = 1
  wave             = 3 0
+MACRO midi < lead
 MACRO pd
  attack           = 0.001
  decay            = 0.9999
