@@ -452,7 +452,8 @@ void PatternWin::key_normal(int ch) {
 			if (it != tune->patterns.end()) {
 				auto& pat = it->second;
 				auto& buffer = pattern_buffer[b];
-				for (int i = 0; i < (int) buffer.size() && i + cursor_y1 < (int) pat.size(); i++) {
+				if (pat.size() < cursor_y1 + buffer.size()) pat.resize(cursor_y1 + buffer.size());
+				for (int i = 0; i < (int) buffer.size(); i++) {
 					pat[cursor_y1 + i] = buffer[i];
 				}
 			}
