@@ -12,18 +12,16 @@
 #include "server.h"
 
 
-
 static Tune tune = { {}, {}, {}, 800, 8, };
-
-
-
 
 Server		server;
 PatternWin	pat_win;
 MessageWin	msg_win;
 
+void midi_callback(int note) { pat_win.midi_callback(note); }
 
 void done() { endwin(); }
+
 int main(int argc, char** argv) {
 
 	if (argc != 2 && argc != 3) {
@@ -65,7 +63,7 @@ int main(int argc, char** argv) {
 	pat_win.init(&tune, tunefile);
 	msg_win.resize();
 
-	server.init(&tune);
+	server.init(&tune, &midi_callback);
 
 	for (;;) {
 

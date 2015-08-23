@@ -417,7 +417,11 @@ void PatternWin::key_record(int ch) {
 		row->macros[0] = macro;
 		server.play_row(cursor_x, *row);
 	}
+}
 
+void PatternWin::midi_callback(int note) {
+	if (note == -1) server.play_row(cursor_x, { -1 });
+	else server.play_row(cursor_x, { note, { macro } });
 }
 
 void PatternWin::key_normal(int ch) {
@@ -560,19 +564,12 @@ void PatternWin::key(int ch) {
 }
 
 void PatternWin::move_cursor(int dx, int dy0, int dy1) {
-	if (dx) {
-		cursor_x = (cursor_x + dx + CHANNEL_COUNT) % CHANNEL_COUNT;
-	}
-
-	if (dy0) {
-		cursor_y0 = (cursor_y0 + dy0 + tune->table.size()) % tune->table.size();
-	}
-
+	if (dx) cursor_x = (cursor_x + dx + CHANNEL_COUNT) % CHANNEL_COUNT;
+	if (dy0) cursor_y0 = (cursor_y0 + dy0 + tune->table.size()) % tune->table.size();
 	if (dy1) {
 		int max_rows = std::max(1, get_max_rows(*tune, cursor_y0));
 		cursor_y1 = (cursor_y1 + dy1 + max_rows) % max_rows;
 	}
-
 	do_scroll();
 }
 

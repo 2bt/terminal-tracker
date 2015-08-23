@@ -9,29 +9,24 @@
 
 class Server {
 public:
+	using MidiCallback = void(int note);
 	~Server();
-	void init(Tune* tune);
+	void	init(Tune* tune, MidiCallback* callback);
 
-	void set_ticks() {
-		_ticks_per_row.init(_tune->ticks_per_row);
-	}
+	void	play(int block=0, bool looping=false);
+	void	stop();
+	bool	is_playing() const { return _playing; }
+	int		get_row()	const { return _row; }
+	int		get_block()	const { return _block; }
 
-	void play(int block=0, bool looping=false);
-	void stop();
-	bool is_playing() const { return _playing; }
+	float	get_chan_level(int chan_nr) const { return _channels[chan_nr].get_level(); }
 
-	int get_row()	const { return _row; }
-	int get_block()	const { return _block; }
-
-	float get_chan_level(int chan_nr) const { return _channels[chan_nr].get_level(); }
-
-	void play_row(int chan_nr, const Row& row) {
+	Row*	get_nearest_row(int chan_nr);
+	void	play_row(int chan_nr, const Row& row) {
 		auto& chan = _channels[chan_nr];
 		if (row.note != 0) chan.note_event(row.note);
 		for (auto& m : row.macros) apply_macro(m, chan);
 	}
-
-	Row* get_nearest_row(int chan_nr);
 
 private:
 	static void audio_callback(void* userdata, unsigned char* stream, int len) {
@@ -44,16 +39,15 @@ private:
 	void init_channels();
 
 	SNDFILE*			_log;
-	PortMidiStream*		_midi;
+	PortMidiStream*		_midi = nullptr;
+	MidiCallback*		_midi_callback = nullptr;
 
-	volatile bool 	_playing;
-	volatile bool	_blockloop;
-	volatile int	_frame;
-	volatile int	_tick;
-	volatile int	_row;
-	volatile int	_block;
-
-
+	bool 	_playing;
+	bool	_blockloop;
+	int		_frame;
+	int		_tick;
+	int		_row;
+	int		_block;
 	Param	_ticks_per_row;
 
 	std::array<Channel,CHANNEL_COUNT> _channels;

@@ -2,26 +2,23 @@
 #include "server.h"
 
 
-void Server::init(Tune* tune) {
+void Server::init(Tune* tune, MidiCallback* callback) {
 
 	// open log file
 	SF_INFO info = { 0, MIXRATE, 2, SF_FORMAT_WAV | SF_FORMAT_PCM_16 };
 	_log = sf_open("log.wav", SFM_WRITE, &info);
 
-
-	// find midi device
+	// midi
+	_midi_callback = callback;
 	Pm_Initialize();
-	_midi = nullptr;
 	int dev_count = Pm_CountDevices();
 	int i;
 	for (i = 0; i < dev_count; i++) {
-		const PmDeviceInfo* info = Pm_GetDeviceInfo(i);
+		auto info = Pm_GetDeviceInfo(i);
 		if (info->output &&
 			std::string(info->name).find("MIDI") != std::string::npos) break;
 	}
-	if (i < dev_count) {
-		Pm_OpenInput(&_midi, 3, nullptr, 0, nullptr, nullptr);
-	}
+	if (i < dev_count) Pm_OpenInput(&_midi, 3, nullptr, 0, nullptr, nullptr);
 
 	// start sound server
 	static SDL_AudioSpec spec = { MIXRATE, AUDIO_S16SYS,
@@ -37,14 +34,11 @@ void Server::init(Tune* tune) {
 	_row = 0;
 
 	_tune = tune;
-
+	_ticks_per_row.init(_tune->ticks_per_row);
 	init_channels();
-	set_ticks();
 
 	SDL_PauseAudio(0);
 }
-
-
 
 Server::~Server() {
 	SDL_CloseAudio();
@@ -90,8 +84,8 @@ void Server::play(int block, bool looping) {
 	_tick = 0;
 	_row = 0;
 
+	_ticks_per_row.init(_tune->ticks_per_row);
 	init_channels();
-	set_ticks();
 }
 
 void Server::stop() {
@@ -116,22 +110,20 @@ Row* Server::get_nearest_row(int chan_nr) {
 	return &pat[row];
 }
 
-
 void Server::tick() {
 
 	// rough and ready midi support
 	if (_midi) {
 		struct { unsigned char type, val, x, y; } event;
 		for (;;) {
-			int l = Pm_Read(_midi, (PmEvent*) &event, 1);
-			if (!l) break;
+			if (!Pm_Read(_midi, (PmEvent*) &event, 1)) break;
 
 			static int last_note = 0;
 			if (event.type == 128 && event.val == last_note) {
-				play_row(15, { -1 });
+				_midi_callback(-1);
 			}
 			else if (event.type == 144) {
-				play_row(15, { event.val + 1, { "midi" }});
+				_midi_callback(event.val + 1);
 				last_note = event.val;
 			}
 		}
