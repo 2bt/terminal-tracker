@@ -513,9 +513,9 @@ void PatternWin::key_normal(int ch) {
 	default: break;
 	}
 
+	Row r;
+	if (!row) row = &r;
 
-	// note editing
-	if (!row) return;
 	if (ch < 32 || ch > 127) return;
 	if (ch == '^') {
 		row->note = -1;
