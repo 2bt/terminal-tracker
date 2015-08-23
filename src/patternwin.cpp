@@ -46,9 +46,6 @@ void PatternWin::draw() {
 		do_scroll();
 	}
 
-
-
-
 	set_style(S_FRAME);
 	mvprintw(top, left, "   ");
 	addch(ACS_ULCORNER);
@@ -420,8 +417,24 @@ void PatternWin::key_record(int ch) {
 }
 
 void PatternWin::midi_callback(int note) {
-	if (note == -1) server.play_row(cursor_x, { -1 });
-	else server.play_row(cursor_x, { note, { macro } });
+	Row row = { note };
+	if (note > 0) row.macros[0] = macro;
+	server.play_row(cursor_x, row);
+
+	if (note > 0 && edit_mode == EM_NORMAL) {
+		auto& pat_name = tune->table[cursor_y0][cursor_x];
+		auto it = tune->patterns.find(pat_name);
+		if (it != tune->patterns.end()) {
+			auto& pat = it->second;
+			if (cursor_y1 < (int) pat.size()) {
+				pat[cursor_y1] = row;
+			}
+		}
+	}
+	else if (edit_mode == EM_RECORD) {
+		auto r = server.get_nearest_row(cursor_x);
+		if (r) *r = row;
+	}
 }
 
 void PatternWin::key_normal(int ch) {

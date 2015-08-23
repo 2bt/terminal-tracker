@@ -34,7 +34,6 @@ void Server::init(Tune* tune, MidiCallback* callback) {
 	_row = 0;
 
 	_tune = tune;
-	_ticks_per_row.init(_tune->ticks_per_row);
 	init_channels();
 
 	SDL_PauseAudio(0);
@@ -84,7 +83,6 @@ void Server::play(int block, bool looping) {
 	_tick = 0;
 	_row = 0;
 
-	_ticks_per_row.init(_tune->ticks_per_row);
 	init_channels();
 }
 
@@ -132,6 +130,7 @@ void Server::tick() {
 
 	// tick server
 	if (_playing && _tick == 0) { // new row
+		if (_row == 0) _ticks_per_row.init(_tune->ticks_per_row);
 		_ticks_per_row.tick();
 	}
 
