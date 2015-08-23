@@ -1,6 +1,6 @@
 
-CF = -Wall --std=c++14 -I PEGTL/ -O2
-LF = -Wall --std=c++14 -lncurses -lSDL -lportmidi -lsndfile
+CF = -Wall --std=c++11 -I PEGTL/ -O2
+LF = -Wall --std=c++11 -lncurses -lSDL -lportmidi -lsndfile
 
 SRC = $(wildcard src/*.cpp)
 OBJ = $(SRC:src/%.cpp=obj/%.o)
