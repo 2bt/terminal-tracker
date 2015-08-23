@@ -1,3 +1,41 @@
+ticks = 8
+frames = 800
+MACRO bass
+ cutoff           = 5000 | +-250
+ panning          = -0.1
+ pulsewidth       = 0.5 0.4 0.3 0.2
+ resonance        = 1
+ volume           = 1 1 1 1 0.8 0.7 0.6
+ wave             = 0
+MACRO kick
+ attack           = 0.01
+ offset           = 60 10 6 0 -4 -5
+ puslewidth       = 0.5
+ resonance        = 0
+ volume           = 1 1 1 | +-0.3
+ wave             = 4 0
+MACRO ld
+ offset           = 7 0
+ pulsewith        = 0.4
+ volume           = 1
+ wave             = 0
+MACRO pad
+ attack           = 0.00005
+ decay            = 0.99999
+ pulsewidth       = 0.3
+ release          = 0.9999
+ resolution       = 10
+ vibratodepth     = 0.2
+ vibratospeed     = 0.05
+ wave             = 1
+MACRO snare
+ attack           = 0.01
+ cutoff           = 6000
+ offset           = 40 12 0 70
+ puslewidth       = 0.5
+ resonance        = 2
+ volume           = 1 1 1 | +-0.08
+ wave             = 4 0 0 4
 TABLE
  drums01........ bass01......... pad01.......... pad02.......... pad03..........
  drums02........ bass01......... pad01.......... pad02.......... pad03..........
@@ -333,41 +371,3 @@ PATTERN pad13
  ... ..... .....
  ... ..... .....
  ... ..... .....
-ticks = 8
-frames = 800
-MACRO bass
- cutoff           = 5000 | +-250
- panning          = -0.1
- pulsewidth       = 0.5 0.4 0.3 0.2
- resonance        = 1
- volume           = 1 1 1 1 0.8 0.7 0.6
- wave             = 0
-MACRO kick
- attack           = 0.01
- offset           = 60 10 6 0 -4 -5
- puslewidth       = 0.5
- resonance        = 0
- volume           = 1 1 1 | +-0.3
- wave             = 4 0
-MACRO ld
- offset           = 7 0
- pulsewith        = 0.4
- volume           = 1
- wave             = 0
-MACRO pad
- attack           = 0.00005
- decay            = 0.99999
- pulsewidth       = 0.3
- release          = 0.9999
- resolution       = 10
- vibratodepth     = 0.2
- vibratospeed     = 0.05
- wave             = 1
-MACRO snare
- attack           = 0.01
- cutoff           = 6000
- offset           = 40 12 0 70
- puslewidth       = 0.5
- resonance        = 2
- volume           = 1 1 1 | +-0.08
- wave             = 4 0 0 4

@@ -248,39 +248,6 @@ bool save_tune(const Tune& tune, const char* name, bool all) {
 	FILE* f = fopen(name, "w");
 	if (!f) return false;
 
-	fprintf(f, "TABLE\n");
-	for (auto& line : tune.table) {
-		int limit = line.size();
-		while (limit > 1 && line[limit - 1] == "") limit--;
-		for (int c = 0; c < limit; c++) {
-			fprintf(f, " ");
-			fprintf(f, "%s", line[c].c_str());
-			for (int i = line[c].size(); i < PatternWin::CHAN_CHAR_WIDTH; i++) fprintf(f, ".");
-		}
-		fprintf(f, "\n");
-	}
-	for (auto& p : tune.patterns) {
-		fprintf(f, "PATTERN %s\n", p.first.c_str());
-		for (auto& row : p.second) {
-			fprintf(f, " ");
-			if (row.note > 0) {
-				fprintf(f, "%c%c%X",
-					"CCDDEFFGGAAB"[(row.note - 1) % 12],
-					"-#-#--#-#-#-"[(row.note - 1) % 12],
-					(row.note - 1) / 12);
-			}
-			else if (row.note == -1) fprintf(f, "===");
-			else fprintf(f, "...");
-
-			for (auto& m : row.macros) {
-				fprintf(f, " %s", m.c_str());
-				for (int i = m.size(); i < PatternWin::MACRO_CHAR_WIDTH; i++) fprintf(f, ".");
-			}
-			fprintf(f, "\n");
-		}
-	}
-
-
 	if (all) {
 
 		// timing
@@ -305,6 +272,38 @@ bool save_tune(const Tune& tune, const char* name, bool all) {
 		}
 	}
 
+	fprintf(f, "TABLE\n");
+	for (auto& line : tune.table) {
+		int limit = line.size();
+		while (limit > 1 && line[limit - 1] == "") limit--;
+		for (int c = 0; c < limit; c++) {
+			fprintf(f, " ");
+			fprintf(f, "%s", line[c].c_str());
+			for (int i = line[c].size(); i < PatternWin::CHAN_CHAR_WIDTH; i++) fprintf(f, ".");
+		}
+		fprintf(f, "\n");
+	}
+
+	for (auto& p : tune.patterns) {
+		fprintf(f, "PATTERN %s\n", p.first.c_str());
+		for (auto& row : p.second) {
+			fprintf(f, " ");
+			if (row.note > 0) {
+				fprintf(f, "%c%c%X",
+					"CCDDEFFGGAAB"[(row.note - 1) % 12],
+					"-#-#--#-#-#-"[(row.note - 1) % 12],
+					(row.note - 1) / 12);
+			}
+			else if (row.note == -1) fprintf(f, "===");
+			else fprintf(f, "...");
+
+			for (auto& m : row.macros) {
+				fprintf(f, " %s", m.c_str());
+				for (int i = m.size(); i < PatternWin::MACRO_CHAR_WIDTH; i++) fprintf(f, ".");
+			}
+			fprintf(f, "\n");
+		}
+	}
 
 	fclose(f);
 	return true;
