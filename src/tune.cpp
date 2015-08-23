@@ -230,7 +230,16 @@ static void write_env(FILE* f, const Envelope& env) {
 		if (i++ == env.loop) fprintf(f, " |");
 		fprintf(f, " ");
 		if (node.delta) fprintf(f, "+");
-		fprintf(f, "%g", node.value);
+
+		// strip float
+		char line[64];
+		char* p = line + sprintf(line, "%.7f", node.value) - 1;
+		while (*p == '0') {
+			*p = '\0';
+			p--;
+		}
+		if (*p == '.') *p = '\0';
+		fprintf(f, line);
 	}
 }
 
