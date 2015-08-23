@@ -308,6 +308,7 @@ void PatternWin::key_mark_pattern(int ch) {
 		pattern_buffer.resize(mark_x_end() - mark_x_begin());
 		for (int c = mark_x_begin(); c < mark_x_end(); c++) {
 			auto& buffer = pattern_buffer[c - mark_x_begin()];
+			buffer.clear();
 			auto it = tune->patterns.find(line[c]);
 			if (it != tune->patterns.end()) {
 				auto& pat = it->second;
