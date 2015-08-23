@@ -45,12 +45,9 @@ private:
 	int scroll_y1_view;
 
 	int mark_y_begin() const { return std::min(cursor_y1, mark_y); }
-	int mark_y_end() const {
-		auto& pat = tune->patterns[tune->table[cursor_y0][cursor_x]];
-		return std::min<int>(
-			std::max(cursor_y1, mark_y) + 1,
-			pat.size());
-	}
+	int mark_y_end() const { return std::max(cursor_y1, mark_y) + 1; }
+	int mark_x_begin() const { return std::min(cursor_x, mark_x); }
+	int mark_x_end() const { return std::max(cursor_x, mark_x) + 1; }
 
 	void key_pattern_name(int ch);
 	void key_macro_name(int ch);
@@ -64,7 +61,7 @@ private:
 	bool			rename_pattern;
 	std::string		old_name;
 
-	Pattern			buffer_pat;
+	std::vector<Pattern>	pattern_buffer;
 
 	std::string		macro = "";
 	int				octave = 3;

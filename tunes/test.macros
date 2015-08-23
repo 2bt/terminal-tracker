@@ -1,5 +1,5 @@
 frames = 800
-ticks = | 9 7
+ticks = 8
 
 MACRO kick
 	wave = 4 0

@@ -1,4 +1,4 @@
-ticks = | 10 6
+ticks = 8
 frames = 800
 MACRO bass
  offset           = 7 0

@@ -175,9 +175,9 @@ void PatternWin::draw() {
 						(edit_mode == EM_RECORD) ? S_RC_NOTE :
 						S_CS_NOTE;
 			}
-			if (edit_mode == EM_MARK_PATTERN && chan_nr == cursor_x) {
-				if (mark_y_begin() <= i && i < mark_y_end()) style = S_MK_NOTE;
-			}
+			if (edit_mode == EM_MARK_PATTERN
+			&& mark_x_begin() <= chan_nr && chan_nr < mark_x_end()
+			&& mark_y_begin() <= i && i < mark_y_end()) style = S_MK_NOTE;
 			set_style(style);
 
 			if (on_pat) {
@@ -284,8 +284,6 @@ void PatternWin::key_macro_name(int ch) {
 
 void PatternWin::key_mark_pattern(int ch) {
 	auto& line = tune->table[cursor_y0];
-	auto& pat_name = line[cursor_x];
-	auto& pat = tune->patterns[pat_name];
 	switch (ch) {
 
 	case KEY_UP:	move_cursor(0, 0, -1); break;
@@ -298,7 +296,7 @@ void PatternWin::key_mark_pattern(int ch) {
 	// mark whole pattern
 	case 'V':
 		mark_y = 0;
-		cursor_y1 = std::max<int>(0, pat.size() - 1);
+		cursor_y1 = std::max<int>(0, get_max_rows(*tune, cursor_y0) - 1);
 		do_scroll();
 		break;
 
@@ -310,21 +308,34 @@ void PatternWin::key_mark_pattern(int ch) {
 	case 'y':
 	case KEY_BACKSPACE:
 		edit_mode = EM_NORMAL;
-		buffer_pat.clear();
-		for (int i = mark_y_begin(); i < mark_y_end(); i++) {
-			buffer_pat.push_back(pat[i]);
-			if (ch == KEY_BACKSPACE) pat[i] = Row();
+		pattern_buffer.resize(mark_x_end() - mark_x_begin());
+		for (int c = mark_x_begin(); c < mark_x_end(); c++) {
+			auto& buffer = pattern_buffer[c - mark_x_begin()];
+			auto it = tune->patterns.find(line[c]);
+			if (it != tune->patterns.end()) {
+				auto& pat = it->second;
+				for (int i = mark_y_begin(); i < mark_y_end() && i < (int) pat.size(); i++) {
+					buffer.push_back(pat[i]);
+					if (ch == KEY_BACKSPACE) pat[i] = Row();
+				}
+			}
 		}
 		break;
 
 	// transpose
 	case '>':
 	case '<':
-		for (int i = mark_y_begin(); i < mark_y_end(); i++) {
-			auto& row = pat[i];
-			if (row.note <= 0) continue;
-			if (ch == '>' && row.note < 120) row.note++;
-			if (ch == '<' && row.note > 1) row.note--;
+		for (int c = mark_x_begin(); c < mark_x_end(); c++) {
+			auto it = tune->patterns.find(line[c]);
+			if (it != tune->patterns.end()) {
+				auto& pat = it->second;
+				for (int i = mark_y_begin(); i < mark_y_end() && i < (int) pat.size(); i++) {
+					auto& row = pat[i];
+					if (row.note <= 0) continue;
+					if (ch == '>' && row.note < 120) row.note++;
+					if (ch == '<' && row.note > 1) row.note--;
+				}
+			}
 		}
 		break;
 
@@ -385,9 +396,10 @@ void PatternWin::key_record(int ch) {
 	}
 
 	auto row = server.get_nearest_row(cursor_x);
+	Row r;
+	if (!row) row = &r;
 
 	// TODO
-	if (!row) return;
 	if (ch < 32 || ch > 127) return;
 	if (ch == '^') {
 		row->note = -1;
@@ -429,19 +441,20 @@ void PatternWin::key_normal(int ch) {
 		return;
 
 	case 'V':
-		if (pat) {
-			edit_mode = EM_MARK_PATTERN;
-			mark_y = cursor_y1;
-		}
+		edit_mode = EM_MARK_PATTERN;
+		mark_x = cursor_x;
+		mark_y = cursor_y1;
 		return;
 
 	case 'P':
-		if (pat) {
-			int len = cursor_y1 + buffer_pat.size();
-			if ((int) pat->size() < len) pat->resize(len);
-			int i = cursor_y1;
-			for (auto& row : buffer_pat) {
-				pat->at(i++) = row;
+		for (int b = 0; b < (int) pattern_buffer.size(); b++) {
+			auto it = tune->patterns.find(line[(cursor_x + b) % CHANNEL_COUNT]);
+			if (it != tune->patterns.end()) {
+				auto& pat = it->second;
+				auto& buffer = pattern_buffer[b];
+				for (int i = 0; i < (int) buffer.size() && i + cursor_y1 < (int) pat.size(); i++) {
+					pat[cursor_y1 + i] = buffer[i];
+				}
 			}
 		}
 		return;
@@ -546,7 +559,7 @@ void PatternWin::key(int ch) {
 }
 
 void PatternWin::move_cursor(int dx, int dy0, int dy1) {
-	if (dx && edit_mode != EM_MARK_PATTERN) {
+	if (dx) {
 		cursor_x = (cursor_x + dx + CHANNEL_COUNT) % CHANNEL_COUNT;
 	}
 
