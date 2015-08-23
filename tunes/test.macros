@@ -1,5 +1,5 @@
 frames = 800
-ticks = 8
+ticks = | 9 7
 
 MACRO kick
 	wave = 4 0
@@ -38,11 +38,24 @@ MACRO pd047 < pd
 	panning = 0.3 | +-0.02 +-0.3 +0.3
 	offset = | 0 0 4 4 7 7 12 12
 
+MACRO crd
+	wave = 0
+	pulsewidth = 0.01 | +0.005
+	release = 0.9998
+MACRO crd0 < crd
+	offset = | 7 7 3 3 0 0
+	panning = 0.4
+MACRO crd1 < crd
+	panning = -0.3
+	offset = | 8 8 3 3 0 0
+MACRO crd2 < crd
+	panning = -0.2
+	offset = | 7 7 4 4 0 0
 
 MACRO lead
 	offset = 0
 	panning = 0.1
-	volume = 1
+	volume = 0.7
 	wave = 3 0
 	pulsewidth = 0.3
 	vibratodepth = 0 0 0 0 0 0 0.1 0.2 0.3
@@ -55,3 +68,5 @@ MACRO fx
 	offset = 0 | +12 +0 +-12.2
 	panning = 0.5 | +-0.01
 	volume = 1 | +-0.01
+
+
