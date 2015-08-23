@@ -165,8 +165,10 @@ void PatternWin::draw() {
 			int i = r + scroll_y1;
 			move(y1 + r + 1, x);
 
-			int style = (pat && i < (int) pat->size()) ? S_NOTE : S_FRAME;
-			if (i == server_row && tune->table[server_block][chan_nr] == pat_name) style = S_PL_NOTE;
+			bool on_pat = (pat && i < (int) pat->size());
+
+			int style = on_pat ? S_NOTE : S_FRAME;
+			if (on_pat && i == server_row && tune->table[server_block][chan_nr] == pat_name) style = S_PL_NOTE;
 			if (i == cursor_y1) style = S_HL_NOTE;
 			if (i == cursor_y1 && cursor_x == chan_nr) {
 				style = (edit_mode == EM_MACRO_NAME) ? S_ET_NOTE :
@@ -178,7 +180,7 @@ void PatternWin::draw() {
 			}
 			set_style(style);
 
-			if (pat && i < (int) pat->size()) {
+			if (on_pat) {
 				auto& row = pat->at(i);
 
 				if (row.note > 0) {
