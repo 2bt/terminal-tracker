@@ -137,11 +137,11 @@ void PatternWin::draw() {
 			move(top + r + 3, x);
 			if (i < (int) tune->table.size()) {
 
-				int style = S_MACRO;
-				if (i == server_block) style = S_PL_MACRO;
-				if (i == cursor_y0) style = S_HL_MACRO;
+				int style = S_PATTERN;
+				if (i == server_block) style = S_PL_PATTERN;
+				if (i == cursor_y0) style = S_HL_PATTERN;
 				if (i == cursor_y0 && cursor_x == chan_nr) {
-					style = (edit_mode == EM_PATTERN_NAME) ? S_ET_MACRO : S_CS_MACRO;
+					style = (edit_mode == EM_PATTERN_NAME) ? S_ET_PATTERN : S_CS_PATTERN;
 				}
 				set_style(style);
 

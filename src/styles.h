@@ -5,6 +5,12 @@ enum Style {
 	S_NORMAL,
 	S_HL_NORMAL,
 
+	S_PATTERN,
+	S_HL_PATTERN,
+	S_CS_PATTERN,
+	S_PL_PATTERN,
+	S_ET_PATTERN,
+
 	S_NOTE,
 	S_MACRO,
 	S_HL_NOTE,
@@ -13,10 +19,10 @@ enum Style {
 	S_CS_MACRO,
 	S_PL_NOTE,
 	S_PL_MACRO,
-	S_MK_NOTE,
-	S_MK_MACRO,
 	S_ET_NOTE,
 	S_ET_MACRO,
+	S_MK_NOTE,
+	S_MK_MACRO,
 	S_RC_NOTE,
 	S_RC_MACRO,
 
@@ -30,9 +36,14 @@ static const struct { int fg, bg, attr; } styles[] {
 	{ COLOR_WHITE,	COLOR_BLACK,	0		},
 	{ COLOR_WHITE,	233, 			0		},
 
+	{ 15,			232, 			0		},
+	{ 15,			235, 			0		},
+	{ 15,			23, 			0		},
+	{ 15,			234, 			0		},
+	{ 15,			22, 			0		},
+
 	{ COLOR_WHITE,	232, 			A_BOLD	},
 	{ 11,			232, 			0		},
-
 	{ COLOR_WHITE,	235, 			A_BOLD	},
 	{ 11,			235, 			0		},
 	{ COLOR_WHITE,	23, 			A_BOLD	},
