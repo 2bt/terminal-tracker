@@ -253,7 +253,11 @@ void PatternWin::key_pattern_name(int ch) {
 			if (rename_pattern && old_name != "") { // rename pattern
 				tune->patterns[pat_name] = tune->patterns[old_name];
 			}
-			else tune->patterns[pat_name].resize(4); // new pattern
+			else {
+				// new pattern
+				int len = std::max<int>(1, get_max_rows(*tune, cursor_y0));
+				tune->patterns[pat_name].resize(len);
+			}
 		}
 	}
 }
@@ -530,6 +534,29 @@ void PatternWin::key_normal(int ch) {
 			old_name = row->macros[0];
 		}
 		return;
+
+	case 'G': // new pattern with auto naming
+		if (pat) return;
+		for (int i = cursor_y0; i >= 0; i--) {
+			auto pn = tune->table[i][cursor_x];
+			if (pn != "") {
+				auto pos = pn.find_last_not_of("0123456789");
+				auto suffix = pn.substr(pos + 1);
+				if (suffix == "") suffix = "0";
+				else pn.erase(pos + 1);
+				while (tune->patterns.find(pn + suffix) != tune->patterns.end()) {
+					auto n = std::to_string(std::stoi(suffix) + 1);
+					suffix = std::string(std::max<int>(0, suffix.size() - n.size()), '0') + n;
+				}
+				int len = std::max<int>(1, get_max_rows(*tune, cursor_y0));
+				pn += suffix;
+				tune->table[cursor_y0][cursor_x] = pn;
+				tune->patterns[pn].resize(len);
+				return;
+			}
+		}
+		return;
+
 
 	case KEY_TAB:
 		edit_mode = EM_RECORD;
