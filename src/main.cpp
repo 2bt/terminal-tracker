@@ -37,6 +37,7 @@ int main(int argc, char** argv) {
 
 	if (!load_tune(tune, tunefile)) {
 		msg_win.say("Error loading tune file");
+		if (tune.table.empty()) tune.table.resize(1);
 	}
 
 	if (tunewatchfile) {

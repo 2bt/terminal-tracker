@@ -307,6 +307,7 @@ void PatternWin::key_mark_pattern(int ch) {
 
 	// copy pattern to buffer
 	case 'y':
+	case 'd':
 	case KEY_BACKSPACE:
 		edit_mode = EM_NORMAL;
 		pattern_buffer.resize(mark_x_end() - mark_x_begin());
@@ -318,7 +319,7 @@ void PatternWin::key_mark_pattern(int ch) {
 				auto& pat = it->second;
 				for (int i = mark_y_begin(); i < mark_y_end() && i < (int) pat.size(); i++) {
 					buffer.push_back(pat[i]);
-					if (ch == KEY_BACKSPACE) pat[i] = Row();
+					if (ch != 'y') pat[i] = Row();
 				}
 			}
 		}

@@ -3,6 +3,14 @@
 
 
 void Server::init(Tune* tune, MidiCallback* callback) {
+	_tune = tune;
+	_playing = false;
+	_blockloop = false;
+	_block = 0;
+	_frame = 0;
+	_tick = 0;
+	_row = 0;
+	init_channels();
 
 	// open log file
 	SF_INFO info = { 0, MIXRATE, 2, SF_FORMAT_WAV | SF_FORMAT_PCM_16 };
@@ -25,17 +33,6 @@ void Server::init(Tune* tune, MidiCallback* callback) {
 		2, 0, 1024, 0, 0, &Server::audio_callback, this
 	};
 	SDL_OpenAudio(&spec, &spec);
-
-	_playing = false;
-	_blockloop = false;
-	_block = 0;
-	_frame = 0;
-	_tick = 0;
-	_row = 0;
-
-	_tune = tune;
-	init_channels();
-
 	SDL_PauseAudio(0);
 }
 
@@ -73,20 +70,18 @@ void Server::init_channels() {
 }
 
 void Server::play(int block, bool looping) {
+	std::lock_guard<std::mutex> guard(_mutex);
 	_playing = true;
 	_blockloop = looping;
-
-	if (block < 0) return;
-
 	_block = block;
 	_frame = 0;
 	_tick = 0;
 	_row = 0;
-
 	init_channels();
 }
 
 void Server::stop() {
+	std::lock_guard<std::mutex> guard(_mutex);
 	_playing = false;
 	for (auto& chan : _channels) chan.note_event(-1);
 }
@@ -169,12 +164,13 @@ bool Server::apply_macro(const std::string& macro_name, Channel& chan) const {
 }
 
 void Server::mix(short* buffer, int length) {
+	std::lock_guard<std::mutex> guard(_mutex);
 	for (int i = 0; i < length; i += 2) {
 
 		if (_frame == 0) tick();
 		if (++_frame >= _tune->frames_per_tick) {
 			_frame = 0;
-				if (_playing) {
+			if (_playing) {
 				if (++_tick >= _ticks_per_row.val()) {
 					_tick = 0;
 					if (++_row >= get_max_rows(*_tune, _block)) {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mutex>
 #include <sndfile.h>
 #include <portmidi.h>
 
@@ -41,13 +42,14 @@ private:
 	SNDFILE*			_log;
 	PortMidiStream*		_midi = nullptr;
 	MidiCallback*		_midi_callback = nullptr;
+	std::mutex			_mutex;
 
-	bool 	_playing;
-	bool	_blockloop;
-	int		_frame;
-	int		_tick;
-	int		_row;
-	int		_block;
+	volatile bool 	_playing;
+	volatile bool	_blockloop;
+	volatile int	_frame;
+	volatile int	_tick;
+	volatile int	_row;
+	volatile int	_block;
 	Param	_ticks_per_row;
 
 	std::array<Channel,CHANNEL_COUNT> _channels;

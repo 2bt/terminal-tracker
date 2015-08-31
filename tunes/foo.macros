@@ -1,4 +1,5 @@
 MACRO kick
+	panning = 0
 	attack = 0.01
 	wave = 4 0
 	puslewidth = 0.5
@@ -8,6 +9,7 @@ MACRO kick
 
 
 MACRO snare
+	panning = -0.1
 	attack = 0.01
 	wave = 4 0 0 4
 	puslewidth = 0.5
@@ -15,6 +17,17 @@ MACRO snare
 	volume = 1 1 1 | +-0.08
 	resonance = 2
 	cutoff = 6000
+
+MACRO hat
+	panning = 0.1
+	attack = 0.01
+	sustain = 0
+	decay = 0.9994
+	wave = 3
+	volume = 0.4
+	resonance = 3
+	cutoff = 7000
+
 
 MACRO bass
 	panning = -0.1
