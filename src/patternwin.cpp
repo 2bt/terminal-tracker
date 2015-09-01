@@ -500,6 +500,14 @@ void PatternWin::key_normal(int ch) {
 		if (row) *row = Row();
 		return;
 
+	case '!':
+		if (row) row->macros[0] = macro;
+		return;
+	case '"':
+		if (row) row->macros[1] = macro;
+		return;
+
+
 	case 'V':
 		edit_mode = EM_MARK_PATTERN;
 		mark_x = cursor_x;
@@ -609,6 +617,7 @@ void PatternWin::key_normal(int ch) {
 
 	default: break;
 	}
+
 
 	Row r;
 	if (!row) row = &r;

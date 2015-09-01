@@ -12,7 +12,7 @@ public:
 	}
 	bool tick() {
 		if (_pos >= (int) _env.nodes.size()) {
-			if (_env.loop == -1) return false;
+			if (_env.loop < 0) return false;
 			_pos = _env.loop;
 		}
 		float v = _value;
