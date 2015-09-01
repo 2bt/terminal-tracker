@@ -12,12 +12,26 @@ void Server::init(Tune* tune, MidiCallback* callback) {
 	_row = 0;
 	init_channels();
 
+	_midi_callback = callback;
+
 	// open log file
 	SF_INFO info = { 0, MIXRATE, 2, SF_FORMAT_WAV | SF_FORMAT_PCM_16 };
 	_log = sf_open("log.wav", SFM_WRITE, &info);
+}
 
+void Server::generate_full_log() {
+	play();
+	short buffer[_tune->frames_per_tick * 2];
+	do {
+		mix(buffer, _tune->frames_per_tick * 2);
+	}
+	while (!(_frame == 0 && _tick == 0 && _row == 0 && _block == 0));
+	pause();
+}
+
+
+void Server::start() {
 	// midi
-	_midi_callback = callback;
 	Pm_Initialize();
 	int dev_count = Pm_CountDevices();
 	int i;
@@ -80,7 +94,7 @@ void Server::play(int block, bool looping) {
 	init_channels();
 }
 
-void Server::stop() {
+void Server::pause() {
 	std::lock_guard<std::mutex> guard(_mutex);
 	_playing = false;
 	for (auto& chan : _channels) chan.note_event(-1);

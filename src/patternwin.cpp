@@ -383,12 +383,12 @@ void PatternWin::key_rec_norm_common(int ch) {
 		break;
 
 	case ' ':
-		if (server.is_playing()) server.stop();
+		if (server.is_playing()) server.pause();
 		else server.play(cursor_y0);
 		break;
 
 	case '\0':
-		if (server.is_playing()) server.stop();
+		if (server.is_playing()) server.pause();
 		else server.play(cursor_y0, true);
 		break;
 

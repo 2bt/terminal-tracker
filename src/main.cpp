@@ -48,6 +48,12 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	server.init(&tune, &midi_callback);
+
+//	server.generate_full_log();
+//	return 0;
+
+
 	atexit(&done);
 
 	initscr();
@@ -64,7 +70,7 @@ int main(int argc, char** argv) {
 	pat_win.init(&tune, tunefile);
 	msg_win.resize();
 
-	server.init(&tune, &midi_callback);
+	server.start();
 
 	for (;;) {
 
