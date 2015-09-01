@@ -113,11 +113,14 @@ void PatternWin::draw() {
 		addch(chan_nr < chan_limit - 1 ? ACS_TTEE : ACS_URCORNER);
 		move(top + 1, x);
 
+
 		int level = clamp(server.get_chan_level(chan_nr), 0.0f, 1.0f) * (CHAN_CHAR_WIDTH - 1);
-		set_style(S_LEVEL);
-		addchs(' ', level);
-		set_style(S_NORMAL);
-		addchs(' ', CHAN_CHAR_WIDTH - 1 - level);
+		for (int i = 0; i < CHAN_CHAR_WIDTH - 1; i++) {
+			set_style(i < level ? S_LEVEL : S_NORMAL);
+			int p = CHAN_CHAR_WIDTH / 2 - 3;
+			addch(!server.get_muted(chan_nr) || i < p || i > p + 4 ? ' ' : "MUTED"[i - p]);
+		}
+
 		printw("%X", chan_nr);
 		set_style(S_FRAME);
 		addch(ACS_VLINE);
@@ -323,6 +326,9 @@ void PatternWin::key_mark_pattern(int ch) {
 				}
 			}
 		}
+		cursor_x = mark_x;
+		cursor_y1 = mark_y;
+		do_scroll();
 		break;
 
 	// transpose
@@ -384,6 +390,26 @@ void PatternWin::key_rec_norm_common(int ch) {
 	case '\0':
 		if (server.is_playing()) server.stop();
 		else server.play(cursor_y0, true);
+		break;
+
+	case 'M':	// mute
+		server.set_muted(cursor_x, !server.get_muted(cursor_x));
+		if (server.get_muted(cursor_x)) server.play_row(cursor_x, { -1 });
+		break;
+	case 'L':	// solo
+		{
+			int s = 0;
+			for (int i = 0; i < CHANNEL_COUNT; i++) s += server.get_muted(i);
+			if (!server.get_muted(cursor_x) && s == CHANNEL_COUNT - 1) {
+				for (int i = 0; i < CHANNEL_COUNT; i++) server.set_muted(i, false);
+			}
+			else {
+				for (int i = 0; i < CHANNEL_COUNT; i++) {
+					server.set_muted(i, i != cursor_x);
+					if (i != cursor_x) server.play_row(i, { -1 });
+				}
+			}
+		}
 		break;
 
 	default: break;

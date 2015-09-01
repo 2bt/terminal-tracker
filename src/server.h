@@ -20,6 +20,9 @@ public:
 	int		get_row()	const { return _row; }
 	int		get_block()	const { return _block; }
 
+	void	set_muted(int chan_nr, bool m) { _muted[chan_nr] = m; }
+	bool	get_muted(int chan_nr) const { return _muted[chan_nr]; }
+
 	float	get_chan_level(int chan_nr) const { return _channels[chan_nr].get_level(); }
 
 	Row*	get_nearest_row(int chan_nr);
@@ -52,7 +55,9 @@ private:
 	volatile int	_block;
 	Param	_ticks_per_row;
 
-	std::array<Channel,CHANNEL_COUNT> _channels;
+	std::array<bool,CHANNEL_COUNT>		_muted;
+	std::array<Channel,CHANNEL_COUNT>	_channels;
+
 	Tune* _tune;
 };
 

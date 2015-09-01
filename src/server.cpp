@@ -123,9 +123,9 @@ void Server::tick() {
 
 	// tick channels
 	auto& line = _tune->table[_block];
-	int i = 0;
-	for (auto& chan : _channels) {
-		if (_playing && _tick == 0) {
+	for (int i = 0; i < CHANNEL_COUNT; i++) {
+		auto& chan = _channels[i];
+		if (_playing && !_muted[i] && _tick == 0) {
 			auto it = _tune->patterns.find(line[i]);
 			if (it != _tune->patterns.end()) {
 				auto& pat = it->second;
@@ -137,7 +137,6 @@ void Server::tick() {
 			}
 		}
 		chan.tick();
-		i++;
 	}
 }
 

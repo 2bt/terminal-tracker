@@ -1,67 +1,92 @@
-frames = 640
+frames = 700
+ticks = | 9 7
 
-ticks = 8
+MACRO boom
+	panning = 0
+	volume = 1 1.5
+	sustain = 1 1 1 1 1 1 0
+	decay = 0.9994
+	attack = 0.01
+	wave = 4 1
+	pulsewidth = 0.5
+	offset = 60 14 10 5 1 -2 0 -1 -2
+	resonance = 1
+	cutoff = 6000
 
 MACRO kick
 	panning = -0.4
 	volume = 1 1.5
-	sustain = 1 1 1 0.7 0
-	decay = 0.9991
+	sustain = 1 1 1 1 1 1 0
+	decay = 0.9995
 	attack = 0.01
 	wave = 4 1
 	resolution = 5
-	puslewidth = 0.5
-	offset = 60 12 6 0 -2 -3 -4 -6
+	pulsewidth = 0.5
+	offset = 60 12 8 3 0 -2 0 -1 -2
 	resonance = 1
 	cutoff = 6000
 
 MACRO kick2 < kick
 	panning = 0.4
 
-
 MACRO snare
 	panning = -0.2
-
-	#sustain = 0
-	decay = 0.9998
-
+	volume = 1
+	sustain = 1 1 0
+	decay = 0.99975
 	attack = 0.01
 	wave = 4 0 0 4
 	puslewidth = 0.5
 	offset = 40 12 0 70
-	volume = 1 1 1 | +-0.08
 	resonance = 2
 	cutoff = 6000
 
+MACRO sn_ < snare
+	panning = 0.1
+	volume = 0.5
+
 MACRO hat
 	panning = 0.2
-	attack = 0.01
+	attack = 0.005
 	sustain = 0
-	decay = 0.9994
-	offset = 45
+	decay = 0.99975
+	offset = 50
 	wave = 4
-	volume = 0.4
+	volume = 0.6
 	resonance = 0
+
+MACRO sup
+	panning = 0.2
+	offset = 40 | +-7
+	pulsewidth = 0.5
+	wave = 2
+	resolution = 8
+	volume = 1
+	sustain = 0
+	decay = 0.9997
+
 
 
 MACRO bass
 	panning = -0.1
 	wave = 0
+	sustain = 0.5
 	pulsewidth = 0.5 0.4 0.3 0.2
-	volume = 1 1 1 1 0.8 0.7 0.6
-
-	cutoff = 5000 | +-250
-	resonance = 1
+	volume = 1
+	cutoff = 5000 +-250 +-250 +-250 +-250 +-250 +-250 +-250 +-250
+	resonance = 2
+	decay = 0.9997
+	release = 0.999
 
 MACRO pad
+	volume = 0.7
 	wave	= 1
-	attack	= 0.00005
-	decay	= 0.99999
-	release = 0.9999
-	vibratodepth = 0.2
-	vibratospeed = 0.05
-	resolution = 10
-	pulsewidth = 0.3
+	sustain = 0.4
+	attack	= 0.001
+	decay	= 0.9994
+	release = 0.9994
+	resolution = 0
+	pulsewidth = 0 | +0.015
 
 
 MACRO ld
