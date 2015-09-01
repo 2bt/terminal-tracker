@@ -1,0 +1,77 @@
+frames = 640
+
+ticks = 8
+
+MACRO kick
+	panning = -0.4
+	volume = 1 1.5
+	sustain = 1 1 1 0.7 0
+	decay = 0.9991
+	attack = 0.01
+	wave = 4 1
+	resolution = 5
+	puslewidth = 0.5
+	offset = 60 12 6 0 -2 -3 -4 -6
+	resonance = 1
+	cutoff = 6000
+
+MACRO kick2 < kick
+	panning = 0.4
+
+
+MACRO snare
+	panning = -0.2
+
+	#sustain = 0
+	decay = 0.9998
+
+	attack = 0.01
+	wave = 4 0 0 4
+	puslewidth = 0.5
+	offset = 40 12 0 70
+	volume = 1 1 1 | +-0.08
+	resonance = 2
+	cutoff = 6000
+
+MACRO hat
+	panning = 0.2
+	attack = 0.01
+	sustain = 0
+	decay = 0.9994
+	offset = 45
+	wave = 4
+	volume = 0.4
+	resonance = 0
+
+
+MACRO bass
+	panning = -0.1
+	wave = 0
+	pulsewidth = 0.5 0.4 0.3 0.2
+	volume = 1 1 1 1 0.8 0.7 0.6
+
+	cutoff = 5000 | +-250
+	resonance = 1
+
+MACRO pad
+	wave	= 1
+	attack	= 0.00005
+	decay	= 0.99999
+	release = 0.9999
+	vibratodepth = 0.2
+	vibratospeed = 0.05
+	resolution = 10
+	pulsewidth = 0.3
+
+
+MACRO ld
+	panning = 0.15
+	wave = 1
+	offset = 0
+	volume = 0.7
+	pulsewidth = 0
+	release = 0.9997
+	vibratodepth = 0 0 0 0 0 0 0.1
+	vibratospeed = 0.07
+
+

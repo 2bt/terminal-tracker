@@ -10,7 +10,7 @@
 
 class Server {
 public:
-	using MidiCallback = void(int note);
+	using MidiCallback = void(int type, int value);
 	~Server();
 	void	init(Tune* tune, MidiCallback* callback);
 

@@ -110,15 +110,7 @@ void Server::tick() {
 		struct { unsigned char type, val, x, y; } event;
 		for (;;) {
 			if (!Pm_Read(_midi, (PmEvent*) &event, 1)) break;
-
-			static int last_note = 0;
-			if (event.type == 128 && event.val == last_note) {
-				_midi_callback(-1);
-			}
-			else if (event.type == 144) {
-				_midi_callback(event.val + 1);
-				last_note = event.val;
-			}
+			_midi_callback(event.type, event.val);
 		}
 	}
 

@@ -18,7 +18,7 @@ Server		server;
 PatternWin	pat_win;
 MessageWin	msg_win;
 
-void midi_callback(int note) { pat_win.midi_callback(note); }
+void midi_callback(int type, int value) { pat_win.midi_callback(type, value); }
 
 void done() { endwin(); }
 

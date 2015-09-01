@@ -422,12 +422,23 @@ void PatternWin::key_record(int ch) {
 	}
 }
 
-void PatternWin::midi_callback(int note) {
-	Row row = { note };
-	if (note > 0) row.macros[0] = macro;
+void PatternWin::midi_callback(int type, int value) {
+	Row row;
+
+	static int last_note = 0;
+	if (type == 128 && value == last_note) {
+		row.note = -1;
+	}
+	else if (type == 144) {
+		row.note = value + 1;
+		last_note = value;
+	}
+	else return;
+
+	if (row.note > 0) row.macros[0] = macro;
 	server.play_row(cursor_x, row);
 
-	if (note > 0 && edit_mode == EM_NORMAL) {
+	if (row.note > 0 && edit_mode == EM_NORMAL) {
 		auto& pat_name = tune->table[cursor_y0][cursor_x];
 		auto it = tune->patterns.find(pat_name);
 		if (it != tune->patterns.end()) {

@@ -21,7 +21,7 @@ public:
 	virtual void draw();
 	virtual void key(int ch);
 
-	void midi_callback(int note);
+	void midi_callback(int type, int value);
 
 private:
 	void do_scroll();
