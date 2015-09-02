@@ -23,35 +23,53 @@ void midi_callback(int type, int value) { pat_win.midi_callback(type, value); }
 void done() { endwin(); }
 
 int main(int argc, char** argv) {
-
-	if (argc != 2 && argc != 3) {
-		printf("usage: %s tune-file [tune-watch-file]\n", argv[0]);
+	bool write_tune = false;
+START:
+	if (argc < 2 || argc > 4) {
+		printf("Usage: %s [-w] tune-file [tune-watch-file]\n", argv[0]);
 		return 0;
+	}
+
+	if (strcmp(argv[1], "-w") == 0) {
+		write_tune = true;
+		if (--argc < 2) goto START;
+		argv++;
 	}
 	const char* tunefile = argv[1];
 	const char* tunewatchfile = (argc == 3) ? argv[2] : nullptr;
-
 
 	int inotify_fd = 0;
 	int tunewatch = 0;
 
 	if (!load_tune(tune, tunefile)) {
+		if (write_tune) {
+			printf("Error loading tune file\n");
+			return 1;
+		}
 		msg_win.say("Error loading tune file");
 		if (tune.table.empty()) tune.table.resize(1);
 	}
 
 	if (tunewatchfile) {
+		if (!load_tune(tune, tunewatchfile)) {
+			if (write_tune) {
+				printf("Error loading tune watch file\n");
+				return 1;
+			}
+			msg_win.say("Error loading tune watch file");
+			if (tune.table.empty()) tune.table.resize(1);
+		}
 		inotify_fd = inotify_init1(IN_NONBLOCK);
 		tunewatch = inotify_add_watch(inotify_fd, tunewatchfile, IN_MODIFY);
-		if (!load_tune(tune, tunewatchfile)) {
-			msg_win.say("Error loading tune watch file");
-		}
 	}
 
 	server.init(&tune, &midi_callback);
 
-//	server.generate_full_log();
-//	return 0;
+	if (write_tune) {
+		printf("Writing tune...\n");
+		server.generate_full_log();
+		return 0;
+	}
 
 
 	atexit(&done);
