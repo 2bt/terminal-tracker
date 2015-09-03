@@ -29,15 +29,14 @@ START:
 		printf("Usage: %s [-w] tune-file [tune-watch-file]\n", argv[0]);
 		return 0;
 	}
-
 	if (strcmp(argv[1], "-w") == 0) {
 		write_tune = true;
 		if (--argc < 2) goto START;
 		argv++;
 	}
+
 	const char* tunefile = argv[1];
 	const char* tunewatchfile = (argc == 3) ? argv[2] : nullptr;
-
 	int inotify_fd = 0;
 	int tunewatch = 0;
 
@@ -47,7 +46,6 @@ START:
 			return 1;
 		}
 		msg_win.say("Error loading tune file");
-		if (tune.table.empty()) tune.table.resize(1);
 	}
 
 	if (tunewatchfile) {
@@ -57,11 +55,12 @@ START:
 				return 1;
 			}
 			msg_win.say("Error loading tune watch file");
-			if (tune.table.empty()) tune.table.resize(1);
 		}
 		inotify_fd = inotify_init1(IN_NONBLOCK);
 		tunewatch = inotify_add_watch(inotify_fd, tunewatchfile, IN_MODIFY);
 	}
+
+	if (tune.table.empty()) tune.table.resize(1);
 
 	server.init(&tune, &midi_callback);
 
