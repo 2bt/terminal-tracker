@@ -73,6 +73,7 @@ void Server::init_channels() {
 			{ "decay",			0.99992	},
 			{ "sustain",		0.5		},
 			{ "release",		0.999	},
+			{ "ringmod",		0		},
 			{ "resonance",		0		},
 			{ "cutoff",			2000	},
 		}
@@ -186,7 +187,9 @@ void Server::mix(short* buffer, int length) {
 			}
 		}
 		float frame[2] = { 0, 0 };
-		for (auto& chan : _channels) chan.add_mix(frame);
+		for (int i = 0; i < CHANNEL_COUNT; i++) {
+			_channels[i].add_mix(frame, _channels[(i + CHANNEL_COUNT - 1) % CHANNEL_COUNT]);
+		}
 		buffer[i + 0] = clamp((int) (frame[0] * 6000), -32768, 32768);
 		buffer[i + 1] = clamp((int) (frame[1] * 6000), -32768, 32768);
 	}

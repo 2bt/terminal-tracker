@@ -35,6 +35,7 @@ bool Channel::set_param_env(std::string name, Envelope env) {
 		{ "decay",			ParamID::DECAY			},
 		{ "sustain",		ParamID::SUSTAIN		},
 		{ "release",		ParamID::RELEASE		},
+		{ "ringmod",		ParamID::RINGMOD		},
 		{ "cutoff",			ParamID::CUTOFF			},
 		{ "resonance",		ParamID::RESONANCE		},
 	};
@@ -54,8 +55,8 @@ void Channel::param_change(ParamID id, float v) {
 	case ParamID::VOLUME:		_volume		= std::max(0.0f, v); break;
 
 	case ParamID::PANNING:
-		_panning[0] = sqrtf(0.5 - clamp(v, -1.0f, 1.0f) * 0.5);
-		_panning[1] = sqrtf(0.5 + clamp(v, -1.0f, 1.0f) * 0.5);
+		_panning[0] = sqrtf(0.5 - clamp<float>(v, -1, 1) * 0.5);
+		_panning[1] = sqrtf(0.5 + clamp<float>(v, -1, 1) * 0.5);
 		break;
 
 	case ParamID::RESOLUTION:		_resolution		= std::max(0.0f, v); break;
@@ -66,6 +67,8 @@ void Channel::param_change(ParamID id, float v) {
 	case ParamID::DECAY:			_decay			= v; break;
 	case ParamID::SUSTAIN:			_sustain		= v; break;
 	case ParamID::RELEASE:			_release		= v; break;
+
+	case ParamID::RINGMOD:			_ringmod		= clamp<float>(v, 0, 1); break;
 
 	case ParamID::RESONANCE:
 		_resonance = v;
@@ -95,7 +98,7 @@ void Channel::tick() {
 
 }
 
-void Channel::add_mix(float frame[2]) {
+void Channel::add_mix(float frame[2], const Channel& modulator) {
 
 	switch (_state) {
 	case State::OFF: return;
@@ -161,6 +164,11 @@ void Channel::add_mix(float frame[2]) {
 
 	if (_resolution > 0) amp = floorf(amp * _resolution) / _resolution;
 	if (_resonance > 0) amp = _filter.mix(amp);
+
+	_amp = amp;
+
+	// ringmod
+	amp = amp * (1 - _ringmod) + modulator._amp * amp * _ringmod;
 
 	amp *= _level;
 	amp *= _volume;

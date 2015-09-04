@@ -47,7 +47,7 @@ public:
 	bool set_param_env(std::string name, Envelope env);
 	void note_event(int note);
 	void tick();
-	void add_mix(float frame[2]);
+	void add_mix(float frame[2], const Channel& modulator);
 
 	float get_level() const { return _level * _volume; }
 
@@ -80,6 +80,8 @@ private:
 	float			_sustain;
 	float			_release;
 
+	float			_amp;
+	float			_ringmod;
 	float			_cutoff;
 	float			_resonance;
 	LPF				_filter;
@@ -100,6 +102,7 @@ private:
 		SUSTAIN,
 		RELEASE,
 
+		RINGMOD,
 		FILTER,
 		CUTOFF,
 		RESONANCE,
