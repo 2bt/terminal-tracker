@@ -1,12 +1,18 @@
+
+
 MACRO f
+	volume = 1
 	wave = 1
-	pulsewidth = | 0 0 0.5 0.5
-	volume = 0
+	pulsewidth = 0.5
 	offset = 0 | +-1.3
+	release = 0.9999
 
 
 MACRO x
-	wave = | 0 0 0
+	offset = 0
+	volume = 1
+	sync = 0
+	wave = 0
 	pulsewidth = 0.5
 	ringmod = 1
 	resolution = 3
@@ -14,3 +20,63 @@ MACRO x
 
 	resonance = 1
 	cutoff = 3000
+
+
+
+MACRO a
+	ringmod = 0
+	wave = 1
+	volume = 1
+	offset = 0 | +0.3
+
+MACRO sync
+	sync = 1
+	wave = 1
+	ringmod = 0
+	volume = 1
+	offset = 0 | +-0.9
+	release = 0.9998
+
+
+# turrican 2 explosion
+MACRO bm1
+	wave	= |  4  0  0  4  0  4  0  4
+	offset	= | 47 20 14 42 11 35 8 30
+	sustain =    1  1  1  1  1  1  1  0
+	decay	= 0.99986
+
+
+
+
+MACRO n
+	wave	= 4
+	offset	= | 47 +-2.5 +-2.5 +-2.5 +-2.5 +-1.5 +-1.5 +-1.5 +-1.5
+	sustain =    1  1  1  1  1  1  1  0
+	decay	= 0.9999
+
+
+# turrican 2 laser
+MACRO nl
+	volume	= 0.2
+	wave	= 4
+	sustain = 1 1 0
+	decay	= 0.9999
+	release	= 0.9997
+	offset	= 59 (12|+-3) | (4|+3) (4|+-3)
+
+MACRO nl2 < nl
+	volume	= 0
+	wave	= 0
+
+
+MACRO ll
+	volume	= 0.3
+	attack	= 0.002
+	sync	= 1
+	pulsewidth = 0.1
+	wave	= 0
+	sustain = 1 1 0
+	decay	= 0.99994
+	release	= 0.9997
+	offset = 64 (4| +-3) | +-1 +-1 +1
+

@@ -5,7 +5,6 @@ void Channel::init() {
 	_filter.init();
 	_state = State::OFF;
 	_level = 0;
-	_shift = 0x7ffff8;
 }
 
 void Channel::note_event(int note) {

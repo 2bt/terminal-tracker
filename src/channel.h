@@ -59,7 +59,8 @@ private:
 	float			_level;
 	float			_phase;
 	float			_speed;
-	unsigned int	_shift;
+//	unsigned int	_shift;
+	unsigned int	_shift = 0x7ffff8;
 
 
 	float			_note;
