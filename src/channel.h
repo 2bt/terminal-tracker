@@ -80,6 +80,8 @@ private:
 	float			_sustain;
 	float			_release;
 
+	bool			_sync;
+	bool			_new_phase;
 	float			_amp;
 	float			_ringmod;
 	float			_cutoff;
@@ -102,6 +104,7 @@ private:
 		SUSTAIN,
 		RELEASE,
 
+		SYNC,
 		RINGMOD,
 		FILTER,
 		CUTOFF,

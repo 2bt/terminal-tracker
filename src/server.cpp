@@ -73,6 +73,7 @@ void Server::init_channels() {
 			{ "decay",			0.99992	},
 			{ "sustain",		0.5		},
 			{ "release",		0.999	},
+			{ "sync",			0		},
 			{ "ringmod",		0		},
 			{ "resonance",		0		},
 			{ "cutoff",			2000	},

@@ -13,6 +13,8 @@ using namespace pegtl;
 	template <class R> using padded = seq<R, Padding>;
 
 	struct Name : identifier {};
+
+
 	struct Number : seq<
 		opt<one<'-'>>,
 		plus<digit>,
@@ -27,9 +29,21 @@ using namespace pegtl;
 		opt<padded<Add>>,
 		padded<Number> > {};
 
+	struct Loop;
+	struct NodeOrLoop : sor<Loop,Node> {};
+
+	struct LoopCount : plus<digit> {};
+	struct LoopEnd : one<')'> {};
+	struct Loop : seq<
+			padded<one<'('>>,
+			padded<LoopCount>,
+			padded<one<'|'>>,
+			plus<NodeOrLoop>,
+			padded<LoopEnd>> {};
+
 	struct Envelope : sor<
-		seq<Node, Envelope>,
-		seq<Pipe, Padding, plus<Node>>,
+		seq<NodeOrLoop, Envelope>,
+		seq<Pipe, Padding, plus<NodeOrLoop>>,
 		success > {};
 
 	struct MacroLine : seq<
@@ -44,6 +58,11 @@ using namespace pegtl;
 		bool delta = false;
 		std::string name;
 		::Envelope env;
+		struct EnvLoop {
+			int count;
+			std::vector<::Envelope::Node> nodes;
+		};
+		std::vector<EnvLoop> loops;
 	};
 
 	template<typename Rule> struct MacroAction : pegtl::nothing<Rule> {};
@@ -54,6 +73,29 @@ using namespace pegtl;
 		}
 	};
 
+	template<> struct MacroAction<LoopCount> {
+		static void apply(const pegtl::input& in, MacroLineState& state) {
+			printf("LoopCount %s\n", in.string().c_str());
+			state.loops.push_back({ std::stoi(in.string()) });
+		}
+	};
+	template<> struct MacroAction<LoopEnd> {
+		static void apply(const pegtl::input& in, MacroLineState& state) {
+			auto& nodes = state.loops.size() > 1 ?
+				state.loops[state.loops.size() - 2].nodes :
+				state.env.nodes;
+
+			auto& back = state.loops.back();
+			while (back.count--) {
+				nodes.insert(nodes.end(), back.nodes.begin(), back.nodes.end());
+			}
+			state.loops.pop_back();
+
+
+			printf("LoopEnd %s\n", in.string().c_str());
+		}
+	};
+
 	template<> struct MacroAction<Add> {
 		static void apply(const pegtl::input& in, MacroLineState& state) {
 			state.delta = true;
@@ -61,8 +103,9 @@ using namespace pegtl;
 	};
 	template<> struct MacroAction<Number> {
 		static void apply(const pegtl::input& in, MacroLineState& state) {
-//			printf("number %s\n", in.string().c_str());
-			state.env.nodes.push_back({std::stof(in.string()), state.delta});
+			printf("Number %s\n", in.string().c_str());
+			auto& nodes = state.loops.size() ? state.loops.back().nodes : state.env.nodes;
+			nodes.push_back({std::stof(in.string()), state.delta});
 			state.delta = false;
 		}
 	};

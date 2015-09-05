@@ -35,6 +35,7 @@ bool Channel::set_param_env(std::string name, Envelope env) {
 		{ "decay",			ParamID::DECAY			},
 		{ "sustain",		ParamID::SUSTAIN		},
 		{ "release",		ParamID::RELEASE		},
+		{ "sync",			ParamID::SYNC			},
 		{ "ringmod",		ParamID::RINGMOD		},
 		{ "cutoff",			ParamID::CUTOFF			},
 		{ "resonance",		ParamID::RESONANCE		},
@@ -68,6 +69,7 @@ void Channel::param_change(ParamID id, float v) {
 	case ParamID::SUSTAIN:			_sustain		= v; break;
 	case ParamID::RELEASE:			_release		= v; break;
 
+	case ParamID::SYNC:				_sync			= v > 0; break;
 	case ParamID::RINGMOD:			_ringmod		= clamp<float>(v, 0, 1); break;
 
 	case ParamID::RESONANCE:
@@ -119,8 +121,14 @@ void Channel::add_mix(float frame[2], const Channel& modulator) {
 	}
 
 
+	float old_phase = _phase;
+
 	_phase += _speed;
 	if (_wave != Wave::C64NOISE) _phase = fmodf(_phase, 1);
+
+	_new_phase = (_phase < old_phase) | (old_phase == 0);
+
+	if (_sync && modulator._new_phase) _phase = 0;
 
 	float amp = 0;
 
