@@ -75,7 +75,7 @@ using namespace pegtl;
 
 	template<> struct MacroAction<LoopCount> {
 		static void apply(const pegtl::input& in, MacroLineState& state) {
-			printf("LoopCount %s\n", in.string().c_str());
+//			printf("LoopCount %s\n", in.string().c_str());
 			state.loops.push_back({ std::stoi(in.string()) });
 		}
 	};
@@ -92,7 +92,7 @@ using namespace pegtl;
 			state.loops.pop_back();
 
 
-			printf("LoopEnd %s\n", in.string().c_str());
+//			printf("LoopEnd %s\n", in.string().c_str());
 		}
 	};
 
@@ -103,7 +103,7 @@ using namespace pegtl;
 	};
 	template<> struct MacroAction<Number> {
 		static void apply(const pegtl::input& in, MacroLineState& state) {
-			printf("Number %s\n", in.string().c_str());
+//			printf("Number %s\n", in.string().c_str());
 			auto& nodes = state.loops.size() ? state.loops.back().nodes : state.env.nodes;
 			nodes.push_back({std::stof(in.string()), state.delta});
 			state.delta = false;
