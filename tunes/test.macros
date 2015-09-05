@@ -32,10 +32,12 @@ MACRO pd
 	attack = 0.001
 
 MACRO pd037 < pd
+	#offset = | 0 0 3 3 7 7 12 12
 	offset = | 0 0 3 3 7 7 12 12
 
 MACRO pd047 < pd
 	panning = 0.3 | +-0.02 +-0.3 +0.3
+	#offset = | 0 0 4 4 7 7 12 12
 	offset = | 0 0 4 4 7 7 12 12
 
 MACRO crd
