@@ -253,16 +253,16 @@ void PatternWin::draw() {
 
 	if (edit_mode == EM_PATTERN_NAME) {
 		curs_set(1);
-		move(4 + cursor_y0 - scroll_y0,
-			(cursor_x - scroll_x) * (CHAN_CHAR_WIDTH + 1) + 4 + line[cursor_x].size());
+		move(top + 3 + cursor_y0 - scroll_y0,
+			left + (cursor_x - scroll_x) * (CHAN_CHAR_WIDTH + 1) + 4 + line[cursor_x].size());
 	}
 	else if (edit_mode == EM_MACRO_NAME) {
 		curs_set(1);
 		auto& pat_name = line[cursor_x];
 		auto& pat = tune->patterns[pat_name];
 		auto& row = pat[cursor_y1];
-		move(4 + scroll_y0_view + cursor_y1 - scroll_y1 + 1,
-			(cursor_x - scroll_x) * (CHAN_CHAR_WIDTH + 1) + 4 + row.macros[0].size() + 4);
+		move(top + 3 + scroll_y0_view + cursor_y1 - scroll_y1 + 1,
+			left + (cursor_x - scroll_x) * (CHAN_CHAR_WIDTH + 1) + 4 + row.macros[0].size() + 4);
 	}
 	else curs_set(0);
 }
