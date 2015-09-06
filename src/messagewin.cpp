@@ -4,7 +4,7 @@
 
 void MessageWin::draw() {
 	for (int y = 0; y < height; y++) {
-		move(top + height - y - 1, left);
+		move(top + y, left);
 		if (y < (int) messages.size()) {
 			printw("%-*s", width, messages[y].text.c_str());
 		}
@@ -13,8 +13,8 @@ void MessageWin::draw() {
 		}
 	}
 	auto now = std::chrono::system_clock::now();
-	while (!messages.empty() && messages.back().time + std::chrono::seconds(1) < now) {
-		messages.pop_back();
+	while (!messages.empty() && messages.front().time + std::chrono::seconds(1) < now) {
+		messages.erase(messages.begin());
 	}
 }
 
@@ -24,7 +24,7 @@ void MessageWin::append(const char* format, ...) {
 	va_start(a, format);
 	vsnprintf(line, 256, format, a);
 	va_end(a);
-	messages.front().text += line;
+	messages.back().text += line;
 }
 void MessageWin::say(const char* format, ...) {
 	char line[256];
@@ -32,6 +32,7 @@ void MessageWin::say(const char* format, ...) {
 	va_start(a, format);
 	vsnprintf(line, 256, format, a);
 	va_end(a);
-	messages.insert(messages.begin(), { line, std::chrono::system_clock::now() });
-	while (messages.size() > MAX_MESSAGES) messages.pop_back();
+	messages.push_back({ line, std::chrono::system_clock::now() });
+	while (messages.size() > MAX_MESSAGES) messages.erase(messages.begin());
+
 }

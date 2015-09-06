@@ -219,8 +219,37 @@ void PatternWin::draw() {
 	}
 
 
-	mvprintw(top - 1, left + 20, "Oct:%d|Macro:%-8s", octave, macro.c_str());
 
+	// extra editing info
+	set_style(S_FRAME);
+	move(top + height - 1, left);
+	addch(ACS_LTEE);
+	move(top + height - 1, left + 3 + MACRO_CHAR_WIDTH);
+	addch(ACS_TTEE);
+
+
+	move(top + height, left);
+	addch(ACS_VLINE);
+	set_style(S_NOTE);
+	addch('0' + octave);
+	addch(' ');
+	set_style(S_MACRO);
+	printw("%s", macro.c_str());
+	addchs('.', MACRO_CHAR_WIDTH - macro.size());
+	set_style(S_FRAME);
+	addch(ACS_VLINE);
+
+
+	move(top + height + 1, left);
+	addch(ACS_LLCORNER);
+	addchs(ACS_HLINE, 2 + MACRO_CHAR_WIDTH);
+	addch(ACS_LRCORNER);
+
+	set_style(S_NORMAL);
+//	mvprintw(top + height + 1, left, "|%1d|%-*s|", octave, MACRO_CHAR_WIDTH, macro.c_str());
+
+
+	// set cursor position
 
 	if (edit_mode == EM_PATTERN_NAME) {
 		curs_set(1);

@@ -28,7 +28,7 @@ private:
 	void move_cursor(int dx, int dy0, int dy1);
 
 
-	int top = 1;
+	int top = 0;
 	int left = 0;
 	int width;
 	int height;

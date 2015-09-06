@@ -17,7 +17,7 @@ public:
 
 	virtual void resize() {
 		top = LINES - MAX_MESSAGES;
-		width = COLS;
+		width = COLS - left;
 	}
 
 	virtual void draw();
@@ -27,7 +27,7 @@ public:
 private:
 
 	int top;
-	int left = 0;
+	int left = 9;
 	int width;
 	int height = MAX_MESSAGES;
 

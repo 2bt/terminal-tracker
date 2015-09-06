@@ -18,4 +18,4 @@ ogg:
 	ffmpeg -i log.wav -c:a libvorbis -qscale:a 7 log.ogg
 
 clean:
-	rm -rf $(TRG) obj/
+	rm -rf $(TRG) obj/ log.wav log.ogg
