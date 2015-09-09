@@ -8,7 +8,7 @@ MACRO bass
  wave             = 0
 MACRO crd
  pulsewidth       = 0.01 | +0.005
- release          = 0.9998
+ release          = 0.5221
  wave             = 0
 MACRO crd0 < crd
  offset           = | 7 7 3 3 0 0
@@ -30,11 +30,11 @@ MACRO kick
  volume           = 1 1 1 1 | +-0.3
  wave             = 4 0
 MACRO ld2
- attack           = 0.001
+ attack           = 0.0227
  offset           = -5 0
  panning          = -0.1
  pulsewidth       = 0.5
- release          = 0.99995
+ release          = 2.0885
  resolution       = 1
  vibratodepth     = 0 0.1 0.2 0.3
  vibratospeed     = 0.12
@@ -49,11 +49,11 @@ MACRO lead
  volume           = 0.7
  wave             = 3 0
 MACRO pd
- attack           = 0.001
- decay            = 0.9999
+ attack           = 0.0227
+ decay            = 1.0442
  panning          = -0.2 | +0.02 +0.3 +-0.3
  pulsewidth       = 0.01 | +0.02
- release          = 0.9999
+ release          = 1.0442
  resolution       = 20
  wave             = 1
 MACRO pd037 < pd

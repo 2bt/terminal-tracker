@@ -5,8 +5,8 @@ MACRO boom
 	panning = 0
 	volume = 1 1.5
 	sustain = 1 1 1 1 1 1 0
-	decay = 0.9994
-	attack = 0.01
+	decay = 0.17
+	attack = 0.0023
 	wave = 4 1
 	pulsewidth = 0.5
 	offset = 60 14 10 5 1 -2 0 -1 -2
@@ -16,7 +16,7 @@ MACRO boom
 MACRO pik
 	panning = 0.1
 	sustain = 0
-	decay = 0.9985
+	decay = 0.07
 	wave = 3 0
 	pulsewidth = 0.5
 	resonance = 1
@@ -32,8 +32,8 @@ MACRO kick
 	panning = -0.4
 	volume = 1 1.5
 	sustain = 1 1 1 1 1 1 0
-	decay = 0.9995
-	attack = 0.01
+	decay = 0.2
+	attack = 0.0023
 	wave = 4 1
 	resolution = 5
 	pulsewidth = 0.5
@@ -48,8 +48,8 @@ MACRO snare
 	panning = -0.05
 	volume = 1
 	sustain = 1 1 0
-	decay = 0.99975
-	attack = 0.01
+	decay = 0.5
+	attack = 0.002
 	wave = 4 0 0 4
 	puslewidth = 0.5
 	offset = 40 12 0 70
@@ -70,7 +70,7 @@ MACRO sn2 < snare
 	pulsewidth = 0.5
 	wave = 3 2 3
 	offset = 0 -2 60
-	decay = 0.9997
+	decay = 0.35
 
 MACRO sn2_ < sn2
 	panning = 0.4
@@ -79,9 +79,9 @@ MACRO sn2_ < sn2
 
 MACRO hat
 	panning = 0.2
-	attack = 0.005
+	attack = 0.0045
 	sustain = 0
-	decay = 0.99975
+	decay = 0.4
 	offset = 50
 	wave = 4
 	volume = 0.6
@@ -95,7 +95,7 @@ MACRO sup
 	resolution = 8
 	volume = 1
 	sustain = 0
-	decay = 0.9997
+	decay = 0.35
 
 
 
@@ -107,23 +107,23 @@ MACRO bass
 	volume = 1.1
 	cutoff = 5000 +-250 +-250 +-250 +-250 +-250 +-250 +-250 +-250
 	resonance = 2
-	decay = 0.9997
-	release = 0.999
+	decay = 0.35
+	release = 0.1
 
 MACRO pad
 	volume = 0.7
 	wave	= 1
 	sustain = 0.4
-	attack	= 0.001
-	decay	= 0.9994
-	release = 0.9994
+	attack	= 0.02
+	decay	= 0.17
+	release = 0.17
 	resolution = 0
 	pulsewidth = 0 | +0.015
 
 
 MACRO pad_ < pad
 	volume	= 1.2
-	decay	= 0.9994
+	decay	= 0.17
 	sustain = 0.1
 
 MACRO pan_a
@@ -147,10 +147,10 @@ MACRO vsu
 MACRO bell
 	panning = 0
 	volume = 1
-	attack = 0.005
+	attack = 0.0045
 	sustain = 0.2
-	decay = 0.99993
-	release = 0.999975
+	decay = 1.5
+	release = 4
 	pulsewidth = 0.2 0.3 0.4 0.5
 	wave = 0
 	offset = 0
@@ -161,9 +161,9 @@ MACRO bell
 MACRO trmp
 	panning = 0
 	volume = 0.9
-	attack = 0.005
+	attack = 0.0045
 	sustain = 0.2
-	decay = 0.99995
+	decay = 2
 	pulsewidth = 0.1 | +0.008
 	wave = 0
 	offset = 0

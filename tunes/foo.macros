@@ -1,6 +1,6 @@
 MACRO kick
 	panning = 0
-	attack = 0.01
+	attack = 0.0023
 	wave = 4 0
 	puslewidth = 0.5
 	offset = 60 10 6 0 -4 -5
@@ -10,7 +10,7 @@ MACRO kick
 
 MACRO snare
 	panning = -0.1
-	attack = 0.01
+	attack = 0.0023
 	wave = 4 0 0 4
 	puslewidth = 0.5
 	offset = 40 12 0 70
@@ -20,9 +20,9 @@ MACRO snare
 
 MACRO hat
 	panning = 0.1
-	attack = 0.01
+	attack = 0.0023
 	sustain = 0
-	decay = 0.9994
+	decay = 0.1740
 	wave = 3
 	volume = 0.4
 	resonance = 3
@@ -40,9 +40,9 @@ MACRO bass
 
 MACRO pad
 	wave	= 1
-	attack	= 0.00005
-	decay	= 0.99999
-	release = 0.9999
+	attack	= 0.4535
+	decay	= 10.4425
+	release = 1.0442
 	vibratodepth = 0.2
 	vibratospeed = 0.05
 	resolution = 10

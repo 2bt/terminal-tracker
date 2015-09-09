@@ -27,9 +27,9 @@ MACRO pd
 	wave = 1
 	resolution = 20
 	pulsewidth = 0.01 | +0.02
-	release	= 0.9999
-	decay	= 0.9999
-	attack = 0.001
+	release	= 1.0442
+	decay	= 1.0442
+	attack = 0.0227
 
 MACRO pd037 < pd
 	#offset = | 0 0 3 3 7 7 12 12
@@ -43,7 +43,7 @@ MACRO pd047 < pd
 MACRO crd
 	wave = 0
 	pulsewidth = 0.01 | +0.005
-	release = 0.9998
+	release = 0.5221
 MACRO crd0 < crd
 	offset = | 7 7 3 3 0 0
 	panning = 0.4
@@ -64,8 +64,8 @@ MACRO lead
 	vibratospeed = 0.1
 
 MACRO ld2
-	attack = 0.001
-	release = 0.99995
+	attack = 0.0227
+	release = 2.0885
 	offset = -5 0
 	panning = -0.1
 	volume = 1

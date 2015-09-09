@@ -63,13 +63,17 @@ void Channel::param_change(ParamID id, float v) {
 	case ParamID::VIBRATO_SPEED:	_vibrato_speed	= v; break;
 	case ParamID::VIBRATO_DEPTH:	_vibrato_depth	= v; break;
 
-	case ParamID::ATTACK:			_attack			= v; break;
-	case ParamID::DECAY:			_decay			= v; break;
-	case ParamID::SUSTAIN:			_sustain		= v; break;
-	case ParamID::RELEASE:			_release		= v; break;
+//	case ParamID::ATTACK:			_attack			= v; break;
+//	case ParamID::DECAY:			_decay			= v; break;
+//	case ParamID::SUSTAIN:			_sustain		= v; break;
+//	case ParamID::RELEASE:			_release		= v; break;
+	case ParamID::ATTACK:			_attack			= 1.0 / 44100 / clamp(v); break;
+	case ParamID::DECAY:			_decay			= exp(log(0.01) / 44100 / v); break;
+	case ParamID::SUSTAIN:			_sustain		= clamp(v); break;
+	case ParamID::RELEASE:			_release		= exp(log(0.01) / 44100 / v); break;
 
 	case ParamID::SYNC:				_sync			= v > 0; break;
-	case ParamID::RINGMOD:			_ringmod		= clamp<float>(v, 0, 1); break;
+	case ParamID::RINGMOD:			_ringmod		= clamp(v); break;
 
 	case ParamID::RESONANCE:
 		_resonance = v;

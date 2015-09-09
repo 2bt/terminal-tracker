@@ -5,7 +5,7 @@
 
 
 template <typename T>
-T clamp(const T& n, const T& a, const T& b) {
+T clamp(const T& n, const T& a=0.0f, const T& b=1.0f) {
 	return std::max(a, std::min(n, b));
 }
 

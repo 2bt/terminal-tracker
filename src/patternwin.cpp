@@ -114,7 +114,7 @@ void PatternWin::draw() {
 		move(top + 1, x);
 
 
-		int level = clamp(server.get_chan_level(chan_nr), 0.0f, 1.0f) * (CHAN_CHAR_WIDTH - 1);
+		int level = clamp(server.get_chan_level(chan_nr)) * (CHAN_CHAR_WIDTH - 1);
 		for (int i = 0; i < CHAN_CHAR_WIDTH - 1; i++) {
 			set_style(i < level ? S_LEVEL : S_NORMAL);
 			int p = CHAN_CHAR_WIDTH / 2 - 3;
@@ -270,7 +270,7 @@ void PatternWin::draw() {
 void PatternWin::key_pattern_name(int ch) {
 	auto& line = tune->table[cursor_y0];
 	auto& pat_name = line[cursor_x];
-	if ((isalnum(ch) || strchr("_-", ch)) && pat_name.size() < PATTERN_CHAR_WIDTH) {
+	if ((isalnum(ch) || strchr("_-+'\"*~!\\/#?$%&=<>", ch)) && pat_name.size() < PATTERN_CHAR_WIDTH) {
 		pat_name += ch;
 	}
 	else if (ch == KEY_BACKSPACE && pat_name.size() > 0) pat_name.pop_back();
@@ -301,11 +301,11 @@ void PatternWin::key_macro_name(int ch) {
 	auto& row = pat[cursor_y1];
 	auto& macro_name = row.macros[0];
 
-	if ((isalnum(ch) || strchr("_-", ch)) && macro_name.size() < MACRO_CHAR_WIDTH) {
+	if ((isalnum(ch) || strchr("_-+'\"*~!\\/#?$%&=<>", ch)) && macro_name.size() < MACRO_CHAR_WIDTH) {
 		macro_name += ch;
 	}
 	else if (ch == KEY_BACKSPACE && macro_name.size() > 0) macro_name.pop_back();
-	else if (ch == 27) {
+	else if (ch == KEY_ESCAPE) {
 		edit_mode = EM_NORMAL;
 		macro_name.assign(old_name);
 	}
