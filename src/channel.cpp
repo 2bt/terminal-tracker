@@ -124,14 +124,13 @@ void Channel::add_mix(float frame[2], const Channel& modulator) {
 	}
 
 
-	float old_phase = _phase;
-
 	_phase += _speed;
 	if (_wave != Wave::C64NOISE) _phase = fmodf(_phase, 1);
 
-	_new_phase = (_phase < old_phase) | (old_phase == 0);
-
-	if (_sync && modulator._new_phase) _phase = 0;
+	// sync
+	if (_sync && modulator._phase < modulator._speed) {
+		_phase = modulator._phase / modulator._speed * _speed;
+	}
 
 	float amp = 0;
 

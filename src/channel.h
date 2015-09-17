@@ -82,7 +82,6 @@ private:
 	float			_release;
 
 	bool			_sync;
-	bool			_new_phase;
 	float			_amp;
 	float			_ringmod;
 	float			_cutoff;
