@@ -1,33 +1,40 @@
 MACRO kick
 	panning = 0
-	attack = 0.0023
+	attack = 0.002
 	wave = 4 0
 	puslewidth = 0.5
 	offset = 60 10 6 0 -4 -5
 	volume = 1 1 1 | +-0.3
-	resonance = 0
+	filter = 3
+	cutoff = 2
+	decay = 2
 
 
 MACRO snare
 	panning = -0.1
-	attack = 0.0023
+	attack = 0.002
 	wave = 4 0 0 4
 	puslewidth = 0.5
 	offset = 40 12 0 70
 	volume = 1 1 1 | +-0.08
-	resonance = 2
-	cutoff = 6000
+	filter = 0
+	cutoff = 3
 
 MACRO hat
 	panning = 0.1
-	attack = 0.0023
+	attack = 0.002
 	sustain = 0
-	decay = 0.1740
+	decay = 0.2
 	wave = 3
 	volume = 0.4
-	resonance = 3
-	cutoff = 7000
+	filter = 0
 
+
+MACRO fs
+	cutoff = 1 | +0.01
+
+MACRO fz
+	cutoff = 20 | +-0.25
 
 MACRO bass
 	panning = -0.1
@@ -35,8 +42,9 @@ MACRO bass
 	pulsewidth = 0.5 0.4 0.3 0.2
 	volume = 1 1 1 1 0.8 0.7 0.6
 
-	cutoff = 5000 | +-250
-	resonance = 1
+#	cutoff = 30 | +-3
+#	cutoff = 12
+	filter = 3
 
 MACRO pad
 	wave	= 1
