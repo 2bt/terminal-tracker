@@ -14,7 +14,11 @@ MACRO snare
 	volume = 1 1 1 1 1 | +-0.08
 
 
-MACRO bass
+MACRO bf1
+	filter = 3
+	cutoff = 20 30 40 30 20 10 3
+
+MACRO bass < bf1
 	panning = -0.1
 	wave = 0
 	puslewidth = 0.2 0.3 0.4 0.5

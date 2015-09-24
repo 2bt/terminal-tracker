@@ -2,9 +2,13 @@
 
 
 void Channel::init() {
-	_filter.init();
 	_state = State::OFF;
 	_level = 0;
+	_filter_l = 0;
+	_filter_b = 0;
+	_filter_h = 0;
+	_smooth[0] = 0;
+	_smooth[1] = 0;
 }
 
 void Channel::note_event(int note) {
@@ -36,6 +40,7 @@ bool Channel::set_param_env(std::string name, Envelope env) {
 		{ "release",		ParamID::RELEASE		},
 		{ "sync",			ParamID::SYNC			},
 		{ "ringmod",		ParamID::RINGMOD		},
+		{ "filter",			ParamID::FILTER			},
 		{ "cutoff",			ParamID::CUTOFF			},
 		{ "resonance",		ParamID::RESONANCE		},
 	};
@@ -63,10 +68,6 @@ void Channel::param_change(ParamID id, float v) {
 	case ParamID::VIBRATO_SPEED:	_vibrato_speed	= v; break;
 	case ParamID::VIBRATO_DEPTH:	_vibrato_depth	= v; break;
 
-//	case ParamID::ATTACK:			_attack			= v; break;
-//	case ParamID::DECAY:			_decay			= v; break;
-//	case ParamID::SUSTAIN:			_sustain		= v; break;
-//	case ParamID::RELEASE:			_release		= v; break;
 	case ParamID::ATTACK:			_attack			= 1.0 / 44100 / clamp(v); break;
 	case ParamID::DECAY:			_decay			= exp(log(0.01) / 44100 / v); break;
 	case ParamID::SUSTAIN:			_sustain		= clamp(v); break;
@@ -75,14 +76,10 @@ void Channel::param_change(ParamID id, float v) {
 	case ParamID::SYNC:				_sync			= v > 0; break;
 	case ParamID::RINGMOD:			_ringmod		= clamp(v); break;
 
-	case ParamID::RESONANCE:
-		_resonance = v;
-		if (v > 0) _filter.set(_cutoff, _resonance);
-		break;
-	case ParamID::CUTOFF:
-		_cutoff = std::max<float>(10, v);
-		_filter.set(_cutoff, _resonance);
-		break;
+
+	case ParamID::FILTER:			_filter			= (uint32_t) v; break;
+	case ParamID::RESONANCE:		_resonance		= 1.1 - 0.04 * clamp<float>(v, 0, 15); break;
+	case ParamID::CUTOFF: 			_cutoff			= clamp<float>(v, 0, 100) * 0.01; break;
 
 	default: break;
 	}
@@ -172,18 +169,38 @@ void Channel::add_mix(float frame[2], const Channel& modulator) {
 	default: break;
 	}
 
+	// low rez
 	if (_resolution > 0) amp = floorf(amp * _resolution) / _resolution;
-	if (_resonance > 0) amp = _filter.mix(amp);
 
-	_amp = amp;
+
+	// filter
+	if (_filter) {
+
+		_filter_h = amp - _filter_b * _resonance - _filter_l;
+		_filter_b += _cutoff * _filter_h;
+		_filter_l += _cutoff * _filter_b;
+
+		amp = 0;
+
+		if (_filter & 1) amp += _filter_l;
+		if (_filter & 2) amp += _filter_b;
+		if (_filter & 4) amp += _filter_h;
+	}
+
 
 	// ringmod
+	_amp = amp;
 	amp = amp * (1 - _ringmod) + modulator._amp * amp * _ringmod;
 
-	amp *= _level;
-	amp *= _volume;
 
-	frame[0] += amp * _panning[0];
-	frame[1] += amp * _panning[1];
+	// smooth volume change
+	float v;
+	float s = 0.97;
+
+	v = _level * _volume * _panning[0]; _smooth[0] = _smooth[0] * s + v * (1 - s);
+	v = _level * _volume * _panning[1]; _smooth[1] = _smooth[1] * s + v * (1 - s);
+
+	frame[0] += amp * _smooth[0];
+	frame[1] += amp * _smooth[1];
 }
 

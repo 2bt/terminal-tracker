@@ -10,35 +10,6 @@ T clamp(const T& n, const T& a=0.0f, const T& b=1.0f) {
 }
 
 
-class LPF {
-public:
-	void init() {
-		_pos = 0;
-		_speed = 0;
-	}
-
-	void set(float freq, float reso) {
-		float w = 2 * M_PI * freq / MIXRATE;
-		float q = 1 - w / (2 * (reso + 0.5 / (1 + w)) + w - 2);
-		_r = q * q;
-		_c = _r + 1 - 2 * cosf(w) * q;
-	}
-	float mix(float a) {
-		_speed += (a - _pos) * _c;
-		_pos += _speed;
-		_speed *= _r;
-		return _pos;
-	}
-
-private:
-	float _r;
-	float _c;
-
-	float _pos;
-	float _speed;
-};
-
-
 class Channel {
 public:
 	Channel() { init(); }
@@ -59,7 +30,6 @@ private:
 	float			_level;
 	float			_phase;
 	float			_speed;
-//	unsigned int	_shift;
 	unsigned int	_shift = 0x7ffff8;
 
 
@@ -70,6 +40,7 @@ private:
 	float			_pulsewidth;
 	float			_volume;
 	float			_panning[2];
+	float			_smooth[2];
 
 	float			_resolution;
 	float			_vibrato_phase;
@@ -84,9 +55,13 @@ private:
 	bool			_sync;
 	float			_amp;
 	float			_ringmod;
+
+	uint32_t		_filter;
 	float			_cutoff;
 	float			_resonance;
-	LPF				_filter;
+	float			_filter_l;
+	float			_filter_b;
+	float			_filter_h;
 
 
 	enum class ParamID {
@@ -106,6 +81,7 @@ private:
 
 		SYNC,
 		RINGMOD,
+
 		FILTER,
 		CUTOFF,
 		RESONANCE,

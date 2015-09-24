@@ -1,5 +1,7 @@
 #pragma once
 
+#include <curses.h>
+
 enum Style {
 	S_DEFAULT,
 	S_NORMAL,

@@ -69,14 +69,15 @@ void Server::init_channels() {
 			{ "resolution",		0		},
 			{ "vibratospeed",	0		},
 			{ "vibratodepth",	0		},
-			{ "attack",			0.002	},
-			{ "decay",			0.99992	},
+			{ "attack",			0.01	},
+			{ "decay",			0.5		},
 			{ "sustain",		0.5		},
-			{ "release",		0.999	},
+			{ "release",		0.2		},
 			{ "sync",			0		},
 			{ "ringmod",		0		},
-			{ "resonance",		0		},
-			{ "cutoff",			2000	},
+			{ "filter",			0		},
+			{ "resonance",		15		},
+			{ "cutoff",			20		},
 		}
 	};
 	for (auto& chan : _channels) {
