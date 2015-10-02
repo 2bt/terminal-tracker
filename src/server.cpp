@@ -192,8 +192,8 @@ void Server::mix(short* buffer, int length) {
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			_channels[i].add_mix(frame, _channels[(i + CHANNEL_COUNT - 1) % CHANNEL_COUNT]);
 		}
-		buffer[i + 0] = clamp((int) (frame[0] * 6000), -32768, 32768);
-		buffer[i + 1] = clamp((int) (frame[1] * 6000), -32768, 32768);
+		buffer[i + 0] = clamp((int) (frame[0] * 6000), -32768, 32767);
+		buffer[i + 1] = clamp((int) (frame[1] * 6000), -32768, 32767);
 	}
 	sf_writef_short(_log, buffer, length / 2);
 }
