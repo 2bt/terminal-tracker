@@ -40,6 +40,53 @@ MACRO sync
 
 
 ## real stuff
+MACRO spdr
+	volume = 1
+	attack = 0.01
+	offset = 0 10 | +-5
+	pulsewidth = 0.5
+	wave = 1
+	filter = 6
+	cutoff = 50 | +-8
+	sustain = 1 1 1 0
+	decay = 0.1
+
+MACRO spdr2
+	volume = 0.4
+	attack = 0.003
+	offset = 0 | +-4
+	pulsewidth = 0.3
+	wave = 0
+	sustain = 1 0
+	decay = 0.14
+
+
+MACRO miss
+	filter = 0
+	volume = 0.2
+	attack = 0.01
+	offset = 0 35 | +-10
+	pulsewidth = 0.5
+	wave = 1 4
+	sustain = 1 0
+	decay = 0.1
+
+
+MACRO blst
+	attack = 0
+	volume = 1
+	offset = | 0 0 0 -12 -12 -24 -24 -36 -36
+	pulsewidth = 0
+	wave = 1
+	sustain = 1 1 0
+	decay = 1.5
+
+MACRO blst_
+	wave = 4
+	sustain = 1 1 0
+	decay = 1.5
+	offset = | 0 (8|+-5)
+
 MACRO cursr
 	volume = 0.8
 	attack = 0.01
@@ -95,7 +142,7 @@ MACRO blt2
 
 MACRO rckt
 	filter = 0
-	volume = 0.6
+	volume = 0.4
 	decay = 0
 	sustain = 1
 	wave = 4 4 4 4 4 4 0 0 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 0
@@ -108,7 +155,7 @@ MACRO spr
 	offset = | 0 -1 -2 -3 -4 -5
 	sustain = | (18|0) (18|1)
 	decay = 1.4
-	pulsewidth = 0.2 | +0.0555555555
+	pulsewidth = 0.04 | (18|+0.04) (18|+-0.04)
 	wave = 0
 
 MACRO coin
@@ -138,7 +185,7 @@ MACRO bm1
 MACRO bm2
 	wave	= |  4  4  0  0  0  0  0  0  0  0  0
 	offset	= | 71 66 38 37 32 30 30 26 26 26 26
-	sustain =    1  1  1  1  1  1  1  1  1  1  1 0
+	sustain = (16|1) 0
 	decay	= 0.8
 
 MACRO ns2
