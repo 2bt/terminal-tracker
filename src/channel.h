@@ -34,10 +34,13 @@ private:
 
 
 	float			_note;
+	float			_dst_note;
+	float			_gliss;
 	float			_offset;
 
 	Wave			_wave;
 	float			_pulsewidth;
+	float			_pulsewidth_sweep;
 	float			_volume;
 	float			_panning[2];
 	float			_smooth[2];
@@ -67,9 +70,11 @@ private:
 	enum class ParamID {
 		WAVE,
 		OFFSET,
+		GLISS,
 		VOLUME,
 		PANNING,
 		PULSEWIDTH,
+		PULSEWIDTH_SWEEP,
 		RESOLUTION,
 		VIBRATO_SPEED,
 		VIBRATO_DEPTH,

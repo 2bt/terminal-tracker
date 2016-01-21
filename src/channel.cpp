@@ -16,7 +16,7 @@ void Channel::note_event(int note) {
 		_state = State::RELEASE;
 	}
 	if (note > 0) {
-		_note = note;
+		_dst_note = note;
 		_state = State::ATTACK;
 		_level = 0;
 		_phase = 0;
@@ -31,6 +31,7 @@ bool Channel::set_param_env(std::string name, Envelope env) {
 		{ "volume",			ParamID::VOLUME			},
 		{ "panning",		ParamID::PANNING		},
 		{ "pulsewidth",		ParamID::PULSEWIDTH		},
+		{ "pulsewidthsweep",ParamID::PULSEWIDTH_SWEEP},
 		{ "resolution",		ParamID::RESOLUTION		},
 		{ "vibratospeed",	ParamID::VIBRATO_SPEED	},
 		{ "vibratodepth",	ParamID::VIBRATO_DEPTH	},
@@ -43,6 +44,7 @@ bool Channel::set_param_env(std::string name, Envelope env) {
 		{ "filter",			ParamID::FILTER			},
 		{ "cutoff",			ParamID::CUTOFF			},
 		{ "resonance",		ParamID::RESONANCE		},
+		{ "gliss",			ParamID::GLISS			},
 	};
 	auto it = m.find(name);
 	if (it == m.end()) return false;
@@ -54,10 +56,12 @@ bool Channel::set_param_env(std::string name, Envelope env) {
 void Channel::param_change(ParamID id, float v) {
 	switch (id) {
 
-	case ParamID::OFFSET:		_offset		= v; break;
-	case ParamID::WAVE:			_wave		= (Wave) v; break;
-	case ParamID::PULSEWIDTH:	_pulsewidth	= fmodf(v, 1); break;
-	case ParamID::VOLUME:		_volume		= std::max(0.0f, v); break;
+	case ParamID::OFFSET:			_offset		= v; break;
+	case ParamID::WAVE:				_wave		= (Wave) v; break;
+	case ParamID::PULSEWIDTH:		_pulsewidth	= fmodf(v, 1); break;
+	case ParamID::VOLUME:			_volume		= std::max(0.0f, v); break;
+	case ParamID::PULSEWIDTH_SWEEP:	_pulsewidth_sweep = v / 1000; break;
+	case ParamID::GLISS:			_gliss		= std::max(0.0f, v); break;
 
 	case ParamID::PANNING:
 		_panning[0] = sqrtf(0.5 - clamp<float>(v, -1, 1) * 0.5);
@@ -92,6 +96,22 @@ void Channel::tick() {
 		if (p.tick()) param_change((ParamID) i, p.val());
 		i++;
 	}
+
+
+
+	_pulsewidth = fmodf(_pulsewidth + _pulsewidth_sweep, 1);
+
+
+	if (_gliss > 0) {
+		if (_note < _dst_note) {
+			_note = std::min(_note + _gliss, _dst_note);
+		}
+		else {
+			_note = std::max(_note - _gliss, _dst_note);
+		}
+	}
+	else _note = _dst_note;
+
 
 	// vibrato
 	_vibrato_phase = fmodf(_vibrato_phase + _vibrato_speed, 1);

@@ -78,6 +78,8 @@ void Server::init_channels() {
 			{ "filter",			0		},
 			{ "resonance",		15		},
 			{ "cutoff",			20		},
+			{ "gliss",			0		},
+			{ "pulsewidthsweep",0		},
 		}
 	};
 	for (auto& chan : _channels) {
@@ -183,7 +185,14 @@ void Server::mix(short* buffer, int length) {
 					_tick = 0;
 					if (++_row >= get_max_rows(*_tune, _block)) {
 						_row = 0;
-						if (!_blockloop && ++_block >= (int) _tune->table.size()) _block = 0;
+						if (!_blockloop && (++_block >= (int) _tune->table.size()
+						|| _tune->table[_block] == TableLine())) {
+							if (_tune->table.size() < 2) _block = 0;
+							else while (--_block > 0) { // find empty table line
+								if (_tune->table[_block - 1] == TableLine()) break;
+							}
+
+						}
 					}
 				}
 			}

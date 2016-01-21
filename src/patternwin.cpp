@@ -18,6 +18,7 @@ enum {
 	KEY_CTRL_R = 18,
 	KEY_CTRL_X = 24,
 	KEY_CTRL_N = 14,
+	KEY_CTRL_D = 4,
 	KEY_ESCAPE = 27,
 	KEY_TAB = 9,
 };
@@ -529,21 +530,26 @@ void PatternWin::key_normal(int ch) {
 		if (row) *row = Row();
 		return;
 
-	case '!':
+	case '!':			// set 1st macro
 		if (row) row->macros[0] = macro;
 		return;
-	case '"':
+	case '"':			// set 2nd macro
 		if (row) row->macros[1] = macro;
 		return;
+	case 'I':			// edit macro name
+		if (row) {
+			edit_mode = EM_MACRO_NAME;
+			old_name = row->macros[0];
+		}
+		return;
 
-
-	case 'V':
+	case 'V':			// mark pattern
 		edit_mode = EM_MARK_PATTERN;
 		mark_x = cursor_x;
 		mark_y = cursor_y1;
 		return;
 
-	case 'P':
+	case 'P':			// paste pattern
 		for (int b = 0; b < (int) pattern_buffer.size(); b++) {
 			auto it = tune->patterns.find(line[(cursor_x + b) % CHANNEL_COUNT]);
 			if (it != tune->patterns.end()) {
@@ -557,7 +563,7 @@ void PatternWin::key_normal(int ch) {
 		}
 		return;
 
-	case 'X':	// delete row
+	case 'X':			// delete row
 		if (pat) {
 			if ((int) pat->size() > std::max<int>(1, cursor_y1)) {
 				pat->erase(pat->begin() + cursor_y1);
@@ -565,13 +571,13 @@ void PatternWin::key_normal(int ch) {
 			}
 		}
 		return;
-	case 'O':	// insert new row
+	case 'O':			// insert new row
 		if (pat) {
 			if ((int) pat->size() < cursor_y1 + 1) pat->resize(cursor_y1 + 1);
 			else pat->insert(pat->begin() + cursor_y1, Row());
 		}
 		return;
-	case 'A':	// append new row
+	case 'A':			// append new row
 		if (pat) {
 			if ((int) pat->size() < cursor_y1 + 1) pat->resize(cursor_y1 + 1);
 			else pat->insert(pat->begin() + cursor_y1 + 1, Row());
@@ -593,28 +599,23 @@ void PatternWin::key_normal(int ch) {
 		else tune->table.insert(tune->table.begin() + cursor_y0 + 1, TableLine());
 		return;
 
-	case KEY_CTRL_R:
+	case KEY_CTRL_R:	// rename pattern
 		edit_mode = EM_PATTERN_NAME;
 		rename_pattern = true;
 		old_name = pat_name;
 		return;
-	case KEY_CTRL_N:
+	case KEY_CTRL_N:	// new pattern
 		edit_mode = EM_PATTERN_NAME;
 		rename_pattern = false;
 		old_name = pat_name;
 		return;
-	case 'N':
-		if (row) {
-			edit_mode = EM_MACRO_NAME;
-			old_name = row->macros[0];
-		}
-		return;
 
-	case 'G': // new pattern with auto naming
+	case KEY_CTRL_D: 	// duplicate above pattern with auto naming
 		if (pat) return;
 		for (int i = cursor_y0; i >= 0; i--) {
 			auto pn = tune->table[i][cursor_x];
 			if (pn != "") {
+				auto& p = tune->patterns[pn];
 				auto pos = pn.find_last_not_of("0123456789");
 				auto suffix = pn.substr(pos + 1);
 				if (suffix == "") suffix = "0";
@@ -623,14 +624,14 @@ void PatternWin::key_normal(int ch) {
 					auto n = std::to_string(std::stoi(suffix) + 1);
 					suffix = std::string(std::max<int>(0, suffix.size() - n.size()), '0') + n;
 				}
-				int len = std::max<int>(1, get_max_rows(*tune, cursor_y0));
 				pn += suffix;
 				tune->table[cursor_y0][cursor_x] = pn;
-				tune->patterns[pn].resize(len);
+				tune->patterns[pn] = p;
 				return;
 			}
 		}
 		return;
+
 
 
 	case KEY_TAB:
