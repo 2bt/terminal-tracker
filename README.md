@@ -15,6 +15,7 @@ Libs you'll need:
 - `libsndfile`
 
 Try it out:
+
 	$ git submodule init
 	$ make
 	$ ./tt tunes/area2.x	# press space to play
