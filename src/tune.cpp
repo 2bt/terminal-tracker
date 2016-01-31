@@ -143,7 +143,7 @@ bool load_tune(Tune& tune, const char* name) {
 
 	Pattern* pat = nullptr;
 	Macro* macro = nullptr;
-	char s[512];
+	char s[1<<10];
 	int mode = 0;
 	int line_nr = 0;
 

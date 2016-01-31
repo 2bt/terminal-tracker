@@ -96,11 +96,25 @@ MACRO cursr
 
 MACRO slct
 	volume = 0.8
-	attack = 0.01
-	sustain = 1 1 0
-	offset = 5 5 0
-	decay = 0.15
+	attack = 0.03
+	sustain = (8|1) 0
+	wave = 1
+	resolution = 2
+	resolution = 1.3 +0.3
+	pulsewidth = 0.3 +0.05
+	pulsewidth = 0.2
+	offset = -10 (3| +0 +0 +5)
+	decay = 0.23
 
+MACRO back
+	volume = 0.8
+	attack = 0.03
+	sustain = 1 1 1 1 1 0
+	wave = 1
+	resolution = 2 +0.1
+	pulsewidth = 0.3 +0.05
+	offset = -22 | +0 +0 +10 +0 +0 +0 +-10
+	decay = 0.4
 
 MACRO pause
 	attack = 0
