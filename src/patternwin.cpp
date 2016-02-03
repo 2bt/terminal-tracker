@@ -478,21 +478,36 @@ void PatternWin::key_record(int ch) {
 	}
 }
 
-void PatternWin::midi_callback(int type, int value) {
-	Row row;
+void PatternWin::midi(int type, int value) {
 
-	static int last_note = 0;
-	if (type == 128 && value == last_note) {
+	Row row;
+	int chan;
+
+	if (type == 128) { // note off event
+		if (note_to_chan[value] == -1) return;
+		chan = note_to_chan[value];
+		chan_to_note[chan] = -1;
+		note_to_chan[value] = -1;
 		row.note = -1;
 	}
 	else if (type == 144) {
+
+		chan = cursor_x;
+		for (int i = 1; i < POLYPHONY; i++) {
+			if (chan_to_note[chan] == -1) break;
+			chan = (chan + 1) % CHANNEL_COUNT;
+		}
+		int old_note = chan_to_note[chan];
+		if (old_note != -1) note_to_chan[old_note] = -1;
+		chan_to_note[chan] = value;
+		note_to_chan[value] = chan;
+
 		row.note = value + 1;
-		last_note = value;
+		row.macros[0] = macro;
 	}
 	else return;
 
-	if (row.note > 0) row.macros[0] = macro;
-	server.play_row(cursor_x, row);
+	server.play_row(chan, row);
 
 	if (row.note > 0 && edit_mode == EM_NORMAL) {
 		auto& pat_name = tune->table[cursor_y0][cursor_x];
@@ -505,8 +520,7 @@ void PatternWin::midi_callback(int type, int value) {
 		}
 	}
 	else if (edit_mode == EM_RECORD) {
-		auto r = server.get_nearest_row(cursor_x);
-		if (r) *r = row;
+		if (auto r = server.get_nearest_row(cursor_x)) *r = row;
 	}
 }
 

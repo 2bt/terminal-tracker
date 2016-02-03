@@ -11,13 +11,15 @@
 #include "server.h"
 
 
+
+
 static Tune tune = { {}, {}, {}, 800, 8, };
 
 Server		server;
 PatternWin	pat_win;
 MessageWin	msg_win;
 
-void midi_callback(int type, int value) { pat_win.midi_callback(type, value); }
+
 
 void done() { endwin(); }
 
@@ -61,7 +63,7 @@ START:
 
 	if (tune.table.empty()) tune.table.resize(1);
 
-	server.init(&tune, &midi_callback);
+	server.init(&tune, [&](int t, int v) { pat_win.midi(t, v); });
 
 	if (write_tune) {
 		printf("Writing tune...\n");

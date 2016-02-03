@@ -8,10 +8,15 @@ public:
 	enum {
 		PATTERN_CHAR_WIDTH = 9,
 		MACRO_CHAR_WIDTH = 5,
-		CHAN_CHAR_WIDTH = 3 + MACROS_PER_ROW * (MACRO_CHAR_WIDTH + 1)
+		CHAN_CHAR_WIDTH = 3 + MACROS_PER_ROW * (MACRO_CHAR_WIDTH + 1),
+
+		POLYPHONY = 5
 	};
 
+
 	void init(Tune* tune, const char* tunefile) {
+		for (auto& c : note_to_chan) c = -1;
+		for (auto& n : chan_to_note) n = -1;
 		this->tune = tune;
 		this->tunefile = tunefile;
 		resize();
@@ -20,8 +25,7 @@ public:
 	virtual void resize();
 	virtual void draw();
 	virtual void key(int ch);
-
-	void midi_callback(int type, int value);
+	void midi(int type, int value);
 
 private:
 	void do_scroll();
@@ -56,12 +60,13 @@ private:
 	void key_record(int ch);
 	void key_normal(int ch);
 	void key_rec_norm_common(int ch);
-	enum EditMode { EM_NORMAL, EM_RECORD, EM_PATTERN_NAME, EM_MACRO_NAME, EM_MARK_PATTERN };
 
+	enum EditMode { EM_NORMAL, EM_RECORD, EM_PATTERN_NAME, EM_MACRO_NAME, EM_MARK_PATTERN };
 	EditMode		edit_mode = EM_NORMAL;
 	bool			rename_pattern;
 	std::string		old_name;
 
+	// for copying
 	std::vector<Pattern>	pattern_buffer;
 
 	std::string		macro = "";
@@ -69,4 +74,8 @@ private:
 
 	Tune*			tune;
 	const char*		tunefile;
+
+	// midi keyboard state
+	int note_to_chan[128];
+	int chan_to_note[CHANNEL_COUNT];
 };

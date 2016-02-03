@@ -2,7 +2,7 @@
 #include "server.h"
 
 
-void Server::init(Tune* tune, MidiCallback* callback) {
+void Server::init(Tune* tune, MidiCallback callback) {
 	_tune = tune;
 	_playing = false;
 	_blockloop = false;
@@ -122,6 +122,12 @@ Row* Server::get_nearest_row(int chan_nr) {
 	return &pat[row];
 }
 
+void Server::play_row(int chan_nr, const Row& row) {
+	auto& chan = _channels[chan_nr];
+	if (row.note != 0) chan.note_event(row.note);
+	for (auto& m : row.macros) apply_macro(m, chan);
+}
+
 void Server::tick() {
 
 	// rough and ready midi support
@@ -201,8 +207,8 @@ void Server::mix(short* buffer, int length) {
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			_channels[i].add_mix(frame, _channels[(i + CHANNEL_COUNT - 1) % CHANNEL_COUNT]);
 		}
-		buffer[i + 0] = clamp((int) (frame[0] * 6000), -32768, 32767);
-		buffer[i + 1] = clamp((int) (frame[1] * 6000), -32768, 32767);
+		buffer[i + 0] = clamp((int) (frame[0] * 8000), -32768, 32767);
+		buffer[i + 1] = clamp((int) (frame[1] * 8000), -32768, 32767);
 	}
 	sf_writef_short(_log, buffer, length / 2);
 }

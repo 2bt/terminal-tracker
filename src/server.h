@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mutex>
+#include <functional>
 #include <sndfile.h>
 #include <portmidi.h>
 
@@ -10,9 +11,9 @@
 
 class Server {
 public:
-	using MidiCallback = void(int type, int value);
+	using MidiCallback = std::function<void(int,int)>;
 	~Server();
-	void	init(Tune* tune, MidiCallback* callback);
+	void	init(Tune* tune, MidiCallback callback);
 	void	generate_full_log();
 	void	start();
 
@@ -28,11 +29,7 @@ public:
 	float	get_chan_level(int chan_nr) const { return _channels[chan_nr].get_level(); }
 
 	Row*	get_nearest_row(int chan_nr);
-	void	play_row(int chan_nr, const Row& row) {
-		auto& chan = _channels[chan_nr];
-		if (row.note != 0) chan.note_event(row.note);
-		for (auto& m : row.macros) apply_macro(m, chan);
-	}
+	void	play_row(int chan_nr, const Row& row);
 
 private:
 	static void audio_callback(void* userdata, unsigned char* stream, int len) {
@@ -46,7 +43,7 @@ private:
 
 	SNDFILE*			_log;
 	PortMidiStream*		_midi = nullptr;
-	MidiCallback*		_midi_callback = nullptr;
+	MidiCallback		_midi_callback = nullptr;
 	std::mutex			_mutex;
 
 	volatile bool 	_playing;
