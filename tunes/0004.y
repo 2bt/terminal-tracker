@@ -1,4 +1,4 @@
-frames = 660
+frames = 640
 #ticks = 8
 ticks = | 7 9
 
@@ -72,6 +72,9 @@ MACRO sn2 < sn
 	decay = 0.35
 
 MACRO b
+	gliss = 0
+	sustain = 0.8
+	decay = 0.4
 	wave = 0
 	pulsewidth = 0.3
 	pulsewidthsweep = 10
@@ -80,12 +83,21 @@ MACRO b
 	cutoff = 100 (150|+-0.5)
 	panning = -0.1
 
+MACRO bb < b
+	wave = 0
+	cutoff = 100 (150|+-3)
+	sustain = 0
+	decay = 0.3
+
+
+MACRO bg < b
+	gliss = 0.3
 
 MACRO pad
 	volume = 0.4
-	attack = 0.05
+	attack = 0.01
 	sustain = 0.1
-	decay = 7
+	decay = 4
 	release = 0.2
 	wave = 1
 	pulsewidth = 0
