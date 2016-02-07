@@ -28,7 +28,7 @@ MACRO pik_ < pik
 	volume = 0.6
 
 
-MACRO kick
+MACRO kick < default
 	panning = -0.3
 	volume = 1 1.5
 	sustain = 1 1 1 1 1 1 0
@@ -44,7 +44,7 @@ MACRO kick
 MACRO kick2 < kick
 	panning = 0.4
 
-MACRO snare
+MACRO snare < default
 	filter = 1
 	cutoff = 80
 	panning = -0.05
@@ -75,7 +75,7 @@ MACRO sn2_ < sn2
 	volume = 0.7
 
 
-MACRO hat
+MACRO hat < default
 	panning = 0.2
 	attack = 0.0045
 	sustain = 0
@@ -110,6 +110,7 @@ MACRO bass
 
 	decay = 0.35
 	release = 0.1
+
 
 
 MACRO pad
@@ -159,6 +160,8 @@ MACRO bell
 	vibratodepth = 0 0 0 0 0 0 0.1
 	vibratospeed = 0.07
 
+
+	echo = 1
 
 MACRO trmp
 	panning = 0

@@ -1,3 +1,8 @@
+frames = 530
+ticks = | 12 10
+echo_length = 20
+echo_feedback = 0.3
+
 MACRO kick
 	panning = 0
 	attack = 0.002
@@ -10,7 +15,7 @@ MACRO kick
 	decay = 2
 
 
-MACRO snare
+MACRO snare < default
 	panning = -0.1
 	attack = 0.002
 	wave = 4 0 0 4
@@ -59,6 +64,9 @@ MACRO pad
 
 MACRO ld
 	wave = 0
-	offset = 7 0
+	offset = 0
 	volume = 1
 	pulsewith = 0.4
+	vibratodepth = 0.15
+	vibratospeed = 0.09
+	echo = 0.5

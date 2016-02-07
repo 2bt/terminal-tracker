@@ -72,26 +72,26 @@ MACRO sn2 < sn
 	decay = 0.35
 
 MACRO b
-	gliss = 0
+	wave = 0
+	offset = 0
 	sustain = 0.8
 	decay = 0.4
-	wave = 0
-	pulsewidth = 0.3
-	pulsewidthsweep = 10
 	release = 0.1
+	pulsewidth = 0.3
+	pulsewidthsweep = 7
 	filter = 1
-	cutoff = 100 (150|+-0.5)
+	cutoff = 70 (110|+-0.5) (30|+-0.3) (10|+-0.2)
 	panning = -0.1
+	gliss = 0
 
 MACRO bb < b
-	wave = 0
 	cutoff = 100 (150|+-3)
 	sustain = 0
 	decay = 0.3
 
 
 MACRO bg < b
-	gliss = 0.3
+	gliss = 0.4
 
 MACRO pad
 	volume = 0.4
@@ -101,7 +101,10 @@ MACRO pad
 	release = 0.2
 	wave = 1
 	pulsewidth = 0
-	pulsewidthsweep = 0.5
+	pulsewidthsweep = 0.8
+	resolution = 2 | +0.1
+	vibratodepth = 0.1
+	vibratospeed = 0.1
 
 
 MACRO p-a < pad

@@ -1,21 +1,28 @@
 ticks = 8
 frames = 650
 
-MACRO kick
+echo_length = 24
+echo_feedback = 0.4
+
+
+MACRO a
+	echo = 1
+
+MACRO kick < default
 	wave = 4 0
 	puslewidth = 0.5
 	offset = 60 10 6 0 -4 -5
 	volume = 1 1 1 1 | +-0.3
 	decay = 1
 
-MACRO snare
+MACRO snare < default
 	wave = 4 0 0 0 4
 	puslewidth = 0.5
 	offset = 40 12 4 0 70
 	volume = 1 1 1 1 1 | +-0.08
 	decay = 1
 
-MACRO tick
+MACRO tick < default
 	volume = 0.6
 	wave = 4
 	offset = 30
@@ -39,10 +46,10 @@ MACRO lead
 	wave = 4 0
 	pulsewidth = 0.1
 	pulsewidthsweep = 0.5
-
 	vibratodepth = (20|0) 0.3
 	vibratospeed = 0.1
 
+	echo = 1
 
 MACRO pad
 	decay = 1

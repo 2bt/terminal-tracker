@@ -1,5 +1,9 @@
 ticks = 8
 frames = 650
+echo_feedback    = 0.4
+echo_length      = 24
+MACRO a
+ echo             = 1
 MACRO bass
  cutoff           = 8 | +-0.3
  decay            = 0.5
@@ -23,13 +27,14 @@ MACRO crd3 < crd
  offset           = | -2 -2 2 2 5 5 9 9 12 12
 MACRO crd4 < crd
  offset           = | 0 0 4 4 7 7 12 12
-MACRO kick
+MACRO kick < default
  decay            = 1
  offset           = 60 10 6 0 -4 -5
  puslewidth       = 0.5
  volume           = 1 1 1 1 | +-0.3
  wave             = 4 0
 MACRO lead
+ echo             = 1
  offset           = 40 0
  pulsewidth       = 0.1
  pulsewidthsweep  = 0.5
@@ -43,13 +48,13 @@ MACRO pad1 < pad
  offset           = | 0 0 3 3 7 7 10 10
 MACRO pad2 < pad
  offset           = | 0 0 2 2 4 4 7 7
-MACRO snare
+MACRO snare < default
  decay            = 1
  offset           = 40 12 4 0 70
  puslewidth       = 0.5
  volume           = 1 1 1 1 1 | +-0.08
  wave             = 4 0 0 0 4
-MACRO tick
+MACRO tick < default
  decay            = 0.1
  offset           = 30
  sustain          = 0
