@@ -113,8 +113,19 @@ void Server::tick() {
 
 	// tick server
 	if (_playing && _tick == 0) { // new row
-		if (_row == 0) _ticks_per_row.init(_tune->ticks_per_row);
+		if (_row == 0) {
+			_ticks_per_row.init(_tune->ticks_per_row);
+			_param_batch.configure(_tune->envs);
+		}
 		_ticks_per_row.tick();
+		_param_batch.tick([this](const std::string name, float v) {
+			if (name == "echo_length") {
+				_fx._echo_length = _tune->frames_per_tick * clamp<int>(v, 0.1, FX::MAX_ECHO_LENGTH);
+			}
+			else if (name == "echo_feedback") {
+				_fx._echo_feedback = clamp<float>(v, 0, 0.99);
+			}
+		});
 	}
 
 	// tick channels
@@ -139,10 +150,14 @@ void Server::tick() {
 bool Server::apply_macro(const Macro& macro, Channel& chan) const {
 	int res = true;
 	for (auto& m : macro.parents) res &= apply_macro(m, chan);
-	return res & chan.set_param_envs(macro.envs);
+	return res & chan.configure_params(macro.envs);
 }
 
 bool Server::apply_macro(const std::string& macro_name, Channel& chan) const {
+	if (macro_name == "default") {
+		chan.reset_params();
+		return true;
+	}
 	if (macro_name == "") return false;
 	auto it = _tune->macros.find(macro_name);
 	if (it == _tune->macros.end()) return false;
@@ -181,8 +196,8 @@ void Server::mix(short* buffer, int length) {
 		_fx.add_mix(frame);
 
 
-		buffer[i + 0] = clamp((int) (frame[0] * 8000), -32768, 32767);
-		buffer[i + 1] = clamp((int) (frame[1] * 8000), -32768, 32767);
+		buffer[i + 0] = clamp((int) (frame[0] * 6000), -32768, 32767);
+		buffer[i + 1] = clamp((int) (frame[1] * 6000), -32768, 32767);
 	}
 	sf_writef_short(_log, buffer, length / 2);
 }

@@ -1,6 +1,10 @@
 #include "channel.h"
 
 
+Channel::Channel() {
+	init();
+}
+
 void Channel::init() {
 	_state = State::OFF;
 	_level = 0;
@@ -9,8 +13,35 @@ void Channel::init() {
 	_filter_h = 0;
 	_smooth[0] = 0;
 	_smooth[1] = 0;
+	reset_params();
+}
 
-	static const EnvelopeMap default_envs = {
+const std::map<std::string,int> Channel::_param_mapping = {
+	{ "wave",			PID_WAVE			},
+	{ "offset",			PID_OFFSET			},
+	{ "volume",			PID_VOLUME			},
+	{ "panning",		PID_PANNING			},
+	{ "pulsewidth",		PID_PULSEWIDTH		},
+	{ "pulsewidthsweep",PID_PULSEWIDTH_SWEEP},
+	{ "resolution",		PID_RESOLUTION		},
+	{ "vibratospeed",	PID_VIBRATO_SPEED	},
+	{ "vibratodepth",	PID_VIBRATO_DEPTH	},
+	{ "attack",			PID_ATTACK			},
+	{ "decay",			PID_DECAY			},
+	{ "sustain",		PID_SUSTAIN			},
+	{ "release",		PID_RELEASE			},
+	{ "sync",			PID_SYNC			},
+	{ "ringmod",		PID_RINGMOD			},
+	{ "filter",			PID_FILTER			},
+	{ "cutoff",			PID_CUTOFF			},
+	{ "resonance",		PID_RESONANCE		},
+	{ "gliss",			PID_GLISS			},
+	{ "echo",			PID_ECHO			},
+};
+
+
+void Channel::reset_params() {
+	static const EnvelopeMap envs = {
 		{ "wave",			0		},
 		{ "offset",			0		},
 		{ "volume",			1		},
@@ -32,86 +63,16 @@ void Channel::init() {
 		{ "pulsewidthsweep",0		},
 		{ "echo",			0		},
 	};
-	set_param_envs(default_envs);
-
+	configure_params(envs);
 }
 
-bool Channel::set_param_envs(const EnvelopeMap& envs) {
-	bool res = true;
-	for (auto& p : envs) res &= set_param_env(p.first, p.second);
-	return res;
-}
-
-bool Channel::set_param_env(std::string name, const Envelope& env) {
-	static const std::map<std::string,ParamID> m {
-		{ "wave",			ParamID::WAVE			},
-		{ "offset",			ParamID::OFFSET			},
-		{ "volume",			ParamID::VOLUME			},
-		{ "panning",		ParamID::PANNING		},
-		{ "pulsewidth",		ParamID::PULSEWIDTH		},
-		{ "pulsewidthsweep",ParamID::PULSEWIDTH_SWEEP},
-		{ "resolution",		ParamID::RESOLUTION		},
-		{ "vibratospeed",	ParamID::VIBRATO_SPEED	},
-		{ "vibratodepth",	ParamID::VIBRATO_DEPTH	},
-		{ "attack",			ParamID::ATTACK			},
-		{ "decay",			ParamID::DECAY			},
-		{ "sustain",		ParamID::SUSTAIN		},
-		{ "release",		ParamID::RELEASE		},
-		{ "sync",			ParamID::SYNC			},
-		{ "ringmod",		ParamID::RINGMOD		},
-		{ "filter",			ParamID::FILTER			},
-		{ "cutoff",			ParamID::CUTOFF			},
-		{ "resonance",		ParamID::RESONANCE		},
-		{ "gliss",			ParamID::GLISS			},
-		{ "echo",			ParamID::ECHO			},
-	};
-	auto it = m.find(name);
-	if (it == m.end()) return false;
-	_params[(int) it->second].init(env);
-	return true;
-}
-
-void Channel::param_change(ParamID id, float v) {
-	switch (id) {
-
-	case ParamID::OFFSET:			_offset			= v; break;
-	case ParamID::WAVE:				_wave			= (Wave) v; break;
-	case ParamID::PULSEWIDTH:		_pulsewidth		= fmodf(v, 1); break;
-	case ParamID::VOLUME:			_volume			= clamp<float>(v, 0, 5); break;
-	case ParamID::PULSEWIDTH_SWEEP:	_pulsewidth_sweep = v / 1000; break;
-	case ParamID::GLISS:			_gliss			= std::max(0.0f, v); break;
-
-	case ParamID::PANNING:
-		_panning[0] = sqrtf(0.5 - clamp<float>(v, -1, 1) * 0.5);
-		_panning[1] = sqrtf(0.5 + clamp<float>(v, -1, 1) * 0.5);
-		break;
-
-	case ParamID::RESOLUTION:		_resolution		= std::max(0.0f, v); break;
-	case ParamID::VIBRATO_SPEED:	_vibrato_speed	= v; break;
-	case ParamID::VIBRATO_DEPTH:	_vibrato_depth	= v; break;
-
-	case ParamID::ATTACK:			_attack			= 1.0 / 44100 / clamp(v); break;
-	case ParamID::DECAY:			_decay			= exp(log(0.01) / 44100 / v); break;
-	case ParamID::SUSTAIN:			_sustain		= clamp(v); break;
-	case ParamID::RELEASE:			_release		= exp(log(0.01) / 44100 / v); break;
-
-	case ParamID::SYNC:				_sync			= v > 0; break;
-	case ParamID::RINGMOD:			_ringmod		= clamp(v); break;
-
-
-	case ParamID::FILTER:			_filter			= (uint32_t) v; break;
-	case ParamID::RESONANCE:		_resonance		= 1.1 - 0.04 * clamp<float>(v, 0, 15); break;
-	case ParamID::CUTOFF: 			_cutoff			= clamp<float>(v, 0, 100) * 0.01; break;
-
-	case ParamID::ECHO: 			_echo			= clamp<float>(v, 0, 1); break;
-
-	default: break;
-	}
+bool Channel::configure_params(const EnvelopeMap& envs) {
+	return _param_batch.configure(envs);
 }
 
 void Channel::note_event(int note) {
 	if (note == -1) {
-		_state = State::RELEASE;
+		if (_state != State::OFF) _state = State::RELEASE;
 	}
 	if (note > 0) {
 		_dst_note = note;
@@ -122,12 +83,45 @@ void Channel::note_event(int note) {
 	}
 }
 
+
 void Channel::tick() {
-	int i = 0;
-	for (auto& p : _params) {
-		if (p.tick()) param_change((ParamID) i, p.val());
-		i++;
-	}
+	_param_batch.tick([this](int pid, float v) {
+		switch (pid) {
+
+		case PID_OFFSET:			_offset			= v; break;
+		case PID_WAVE:				_wave			= (Wave) v; break;
+		case PID_PULSEWIDTH:		_pulsewidth		= fmodf(v, 1); break;
+		case PID_VOLUME:			_volume			= clamp<float>(v, 0, 5); break;
+		case PID_PULSEWIDTH_SWEEP:	_pulsewidth_sweep = v / 1000; break;
+		case PID_GLISS:				_gliss			= std::max(0.0f, v); break;
+
+		case PID_PANNING:
+			_panning[0] = sqrtf(0.5 - clamp<float>(v, -1, 1) * 0.5);
+			_panning[1] = sqrtf(0.5 + clamp<float>(v, -1, 1) * 0.5);
+			break;
+
+		case PID_RESOLUTION:		_resolution		= std::max(0.0f, v); break;
+		case PID_VIBRATO_SPEED:	_vibrato_speed	= v; break;
+		case PID_VIBRATO_DEPTH:	_vibrato_depth	= v; break;
+
+		case PID_ATTACK:			_attack			= 1.0 / 44100 / clamp(v); break;
+		case PID_DECAY:				_decay			= exp(log(0.01) / 44100 / v); break;
+		case PID_SUSTAIN:			_sustain		= clamp(v); break;
+		case PID_RELEASE:			_release		= exp(log(0.01) / 44100 / v); break;
+
+		case PID_SYNC:				_sync			= v > 0; break;
+		case PID_RINGMOD:			_ringmod		= clamp(v); break;
+
+
+		case PID_FILTER:			_filter			= (uint32_t) v; break;
+		case PID_RESONANCE:			_resonance		= 1.1 - 0.04 * clamp<float>(v, 0, 15); break;
+		case PID_CUTOFF: 			_cutoff			= clamp<float>(v, 0, 100) * 0.01; break;
+
+		case PID_ECHO: 				_echo			= clamp<float>(v, 0, 1); break;
+
+		default: break;
+		}
+	});
 
 
 
@@ -169,6 +163,7 @@ void Channel::add_mix(float* frame, const Channel& modulator, FX& fx) {
 	case State::RELEASE:
 	default:
 		_level *= _release;
+		if (_level < 0.0001) _state = State::OFF;
 		break;
 	}
 

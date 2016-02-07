@@ -243,12 +243,13 @@ bool load_tune(Tune& tune, const char* name) {
 
 		peg::MacroLineState state;
 		if (pegtl::parse<peg::MacroLine,peg::MacroAction>(s, "", state)) {
-			if (state.name == "ticks") tune.ticks_per_row = state.env;
-			else if (state.name == "frames") {
+			if (state.name == "frames") {
 				if (state.env.nodes.size() != 1
 				||	state.env.loop != -1) goto FAIL;
 				tune.frames_per_tick = state.env.nodes[0].value;
 			}
+			else if (state.name == "ticks") tune.ticks_per_row = state.env;
+			else tune.envs[state.name] = state.env;
 			continue;
 		}
 
@@ -297,6 +298,13 @@ bool save_tune(const Tune& tune, const char* name, bool all) {
 		fprintf(f, "ticks =");
 		write_env(f, tune.ticks_per_row);
 		fprintf(f, "\nframes = %d\n", tune.frames_per_tick);
+
+		// global stuff
+		for (auto& p : tune.envs) {
+			fprintf(f, "%-16s =", p.first.c_str());
+			write_env(f, p.second);
+			fprintf(f, "\n");
+		}
 
 		// macros
 		for (auto& p : tune.macros) {

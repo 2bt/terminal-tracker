@@ -78,7 +78,7 @@ START:
 	start_color();
 	cbreak();
 	noecho();
-	timeout(100);
+	timeout(83);
 	keypad(stdscr, TRUE);
 	meta(stdscr, TRUE);
 

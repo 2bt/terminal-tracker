@@ -13,10 +13,11 @@ T clamp(const T& n, const T& a=0.0f, const T& b=1.0f) {
 
 class Channel {
 public:
-	Channel() { init(); }
+	Channel();
 
 	void init();
-	bool set_param_envs(const EnvelopeMap& envs);
+	void reset_params();
+	bool configure_params(const EnvelopeMap& envs);
 	void note_event(int note);
 	void tick();
 	void add_mix(float* frame, const Channel& modulator, FX& fx);
@@ -72,36 +73,32 @@ private:
 	float			_echo;
 
 
-	enum class ParamID {
-		WAVE,
-		OFFSET,
-		GLISS,
-		VOLUME,
-		PANNING,
-		PULSEWIDTH,
-		PULSEWIDTH_SWEEP,
-		RESOLUTION,
-		VIBRATO_SPEED,
-		VIBRATO_DEPTH,
+	enum ParamID {
+		PID_WAVE,
+		PID_OFFSET,
+		PID_GLISS,
+		PID_VOLUME,
+		PID_PANNING,
+		PID_PULSEWIDTH,
+		PID_PULSEWIDTH_SWEEP,
+		PID_RESOLUTION,
+		PID_VIBRATO_SPEED,
+		PID_VIBRATO_DEPTH,
+		PID_ATTACK,
+		PID_DECAY,
+		PID_SUSTAIN,
+		PID_RELEASE,
+		PID_SYNC,
+		PID_RINGMOD,
+		PID_FILTER,
+		PID_CUTOFF,
+		PID_RESONANCE,
+		PID_ECHO,
 
-		ATTACK,
-		DECAY,
-		SUSTAIN,
-		RELEASE,
-
-		SYNC,
-		RINGMOD,
-
-		FILTER,
-		CUTOFF,
-		RESONANCE,
-
-		ECHO,
-
-		PARAM_COUNT
+		PID_PARAM_COUNT
 	};
 
-	std::array<Param,(int)ParamID::PARAM_COUNT> _params;
-	void param_change(ParamID id, float v);
+	static const std::map<std::string,int>		_param_mapping;
+	ParamBatch<PID_PARAM_COUNT,_param_mapping>	_param_batch;
 };
 

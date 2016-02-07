@@ -29,10 +29,8 @@ struct Envelope {
 	};
 	std::vector<Node> nodes;
 	int loop;
-	Envelope(std::vector<Node> n, int l) : nodes(n), loop(l) {}
-	Envelope(std::vector<Node> n) : nodes(n), loop(-1) {}
+	Envelope(std::vector<Node> n={}, int l=-1) : nodes(n), loop(l) {}
 	Envelope(float v) : nodes({v}), loop(-1) {}
-	Envelope() : nodes(), loop(-1) {}
 };
 
 typedef	std::map<std::string,Envelope>			EnvelopeMap;
@@ -56,6 +54,8 @@ struct Tune {
 	MacroMap					macros;
 	int							frames_per_tick;
 	Envelope					ticks_per_row;
+
+	EnvelopeMap					envs;
 };
 
 

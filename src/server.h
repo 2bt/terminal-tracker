@@ -52,7 +52,10 @@ private:
 	volatile int	_tick;
 	volatile int	_row;
 	volatile int	_block;
-	Param	_ticks_per_row;
+	Param			_ticks_per_row;
+
+	SimpleParamBatch		_param_batch;
+
 
 	std::array<bool,CHANNEL_COUNT>		_muted;
 	std::array<Channel,CHANNEL_COUNT>	_channels;

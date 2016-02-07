@@ -3,6 +3,7 @@
 #include "tune.h"
 
 class FX {
+	friend class Server;
 public:
 
 	void init();
@@ -13,11 +14,10 @@ private:
 	enum { MAX_ECHO_LENGTH = MIXRATE * 2 };
 
 
-	float	_echo_buffers[MAX_ECHO_LENGTH][2];
+	float	_echo_frames[MAX_ECHO_LENGTH][2];
 	int		_echo_pos;
 
 	float	_echo_feedback;
-	float	_echo_gain;
 	int		_echo_length;
 };
 

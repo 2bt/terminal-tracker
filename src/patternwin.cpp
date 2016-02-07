@@ -520,6 +520,12 @@ void PatternWin::midi(int type, int value) {
 		}
 	}
 	else if (edit_mode == EM_RECORD) {
+
+		// record note off event only of no other voice active
+		if (row.note == -1) {
+			for (int n : chan_to_note) if (n != -1) return;
+		}
+
 		if (auto r = server.get_nearest_row(cursor_x)) *r = row;
 	}
 }
