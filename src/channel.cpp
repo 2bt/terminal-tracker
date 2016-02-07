@@ -9,22 +9,40 @@ void Channel::init() {
 	_filter_h = 0;
 	_smooth[0] = 0;
 	_smooth[1] = 0;
+
+	static const EnvelopeMap default_envs = {
+		{ "wave",			0		},
+		{ "offset",			0		},
+		{ "volume",			1		},
+		{ "panning",		0		},
+		{ "pulsewidth",		0.5		},
+		{ "resolution",		0		},
+		{ "vibratospeed",	0		},
+		{ "vibratodepth",	0		},
+		{ "attack",			0.01	},
+		{ "decay",			0.5		},
+		{ "sustain",		0.5		},
+		{ "release",		0.2		},
+		{ "sync",			0		},
+		{ "ringmod",		0		},
+		{ "filter",			0		},
+		{ "resonance",		15		},
+		{ "cutoff",			20		},
+		{ "gliss",			0		},
+		{ "pulsewidthsweep",0		},
+		{ "echo",			0		},
+	};
+	set_param_envs(default_envs);
+
 }
 
-void Channel::note_event(int note) {
-	if (note == -1) {
-		_state = State::RELEASE;
-	}
-	if (note > 0) {
-		_dst_note = note;
-		_state = State::ATTACK;
-		_level = 0;
-		_phase = 0;
-		_vibrato_phase = 0;
-	}
+bool Channel::set_param_envs(const EnvelopeMap& envs) {
+	bool res = true;
+	for (auto& p : envs) res &= set_param_env(p.first, p.second);
+	return res;
 }
 
-bool Channel::set_param_env(std::string name, Envelope env) {
+bool Channel::set_param_env(std::string name, const Envelope& env) {
 	static const std::map<std::string,ParamID> m {
 		{ "wave",			ParamID::WAVE			},
 		{ "offset",			ParamID::OFFSET			},
@@ -45,6 +63,7 @@ bool Channel::set_param_env(std::string name, Envelope env) {
 		{ "cutoff",			ParamID::CUTOFF			},
 		{ "resonance",		ParamID::RESONANCE		},
 		{ "gliss",			ParamID::GLISS			},
+		{ "echo",			ParamID::ECHO			},
 	};
 	auto it = m.find(name);
 	if (it == m.end()) return false;
@@ -52,16 +71,15 @@ bool Channel::set_param_env(std::string name, Envelope env) {
 	return true;
 }
 
-
 void Channel::param_change(ParamID id, float v) {
 	switch (id) {
 
-	case ParamID::OFFSET:			_offset		= v; break;
-	case ParamID::WAVE:				_wave		= (Wave) v; break;
-	case ParamID::PULSEWIDTH:		_pulsewidth	= fmodf(v, 1); break;
-	case ParamID::VOLUME:			_volume		= std::max(0.0f, v); break;
+	case ParamID::OFFSET:			_offset			= v; break;
+	case ParamID::WAVE:				_wave			= (Wave) v; break;
+	case ParamID::PULSEWIDTH:		_pulsewidth		= fmodf(v, 1); break;
+	case ParamID::VOLUME:			_volume			= clamp<float>(v, 0, 5); break;
 	case ParamID::PULSEWIDTH_SWEEP:	_pulsewidth_sweep = v / 1000; break;
-	case ParamID::GLISS:			_gliss		= std::max(0.0f, v); break;
+	case ParamID::GLISS:			_gliss			= std::max(0.0f, v); break;
 
 	case ParamID::PANNING:
 		_panning[0] = sqrtf(0.5 - clamp<float>(v, -1, 1) * 0.5);
@@ -85,9 +103,23 @@ void Channel::param_change(ParamID id, float v) {
 	case ParamID::RESONANCE:		_resonance		= 1.1 - 0.04 * clamp<float>(v, 0, 15); break;
 	case ParamID::CUTOFF: 			_cutoff			= clamp<float>(v, 0, 100) * 0.01; break;
 
+	case ParamID::ECHO: 			_echo			= clamp<float>(v, 0, 1); break;
+
 	default: break;
 	}
+}
 
+void Channel::note_event(int note) {
+	if (note == -1) {
+		_state = State::RELEASE;
+	}
+	if (note > 0) {
+		_dst_note = note;
+		_state = State::ATTACK;
+		_level = 0;
+		_phase = 0;
+		_vibrato_phase = 0;
+	}
 }
 
 void Channel::tick() {
@@ -120,7 +152,7 @@ void Channel::tick() {
 
 }
 
-void Channel::add_mix(float frame[2], const Channel& modulator) {
+void Channel::add_mix(float* frame, const Channel& modulator, FX& fx) {
 
 	switch (_state) {
 	case State::OFF: return;
@@ -214,13 +246,18 @@ void Channel::add_mix(float frame[2], const Channel& modulator) {
 
 
 	// smooth volume change
-	float v;
-	float s = 0.97;
+	{
+		float v;
+		const float s = 0.97;
+		v = _level * _volume * _panning[0]; _smooth[0] = _smooth[0] * s + v * (1 - s);
+		v = _level * _volume * _panning[1]; _smooth[1] = _smooth[1] * s + v * (1 - s);
+	}
 
-	v = _level * _volume * _panning[0]; _smooth[0] = _smooth[0] * s + v * (1 - s);
-	v = _level * _volume * _panning[1]; _smooth[1] = _smooth[1] * s + v * (1 - s);
+	float out[] = { amp * _smooth[0], amp * _smooth[1] };
+	frame[0] += out[0];
+	frame[1] += out[1];
 
-	frame[0] += amp * _smooth[0];
-	frame[1] += amp * _smooth[1];
+	// global effects
+	fx.echo(out[0] * _echo, out[1] * _echo);
 }
 

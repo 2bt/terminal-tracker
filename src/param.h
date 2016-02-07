@@ -5,7 +5,7 @@
 
 class Param {
 public:
-	void init(Envelope env) {
+	void init(const Envelope& env) {
 		_env = env;
 		_pos = 0;
 		_first_tick = true;

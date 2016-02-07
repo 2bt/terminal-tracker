@@ -6,6 +6,7 @@
 #include <portmidi.h>
 
 #include "channel.h"
+#include "fx.h"
 
 
 
@@ -39,7 +40,6 @@ private:
 	void tick();
 	bool apply_macro(const Macro& macro, Channel& chan) const;
 	bool apply_macro(const std::string& macro_name, Channel& chan) const;
-	void init_channels();
 
 	SNDFILE*			_log;
 	PortMidiStream*		_midi = nullptr;
@@ -56,6 +56,7 @@ private:
 
 	std::array<bool,CHANNEL_COUNT>		_muted;
 	std::array<Channel,CHANNEL_COUNT>	_channels;
+	FX									_fx;
 
 	Tune* _tune;
 };

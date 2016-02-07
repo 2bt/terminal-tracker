@@ -10,7 +10,8 @@ void Server::init(Tune* tune, MidiCallback callback) {
 	_frame = 0;
 	_tick = 0;
 	_row = 0;
-	init_channels();
+	for (auto& chan : _channels) chan.init();
+	_fx.init();
 
 	_midi_callback = callback;
 
@@ -57,37 +58,6 @@ Server::~Server() {
 	Pm_Terminate();
 }
 
-void Server::init_channels() {
-	static const Macro default_macro = {
-		{},
-		{
-			{ "wave",			0		},
-			{ "offset",			0		},
-			{ "volume",			1		},
-			{ "panning",		0		},
-			{ "pulsewidth",		0.5		},
-			{ "resolution",		0		},
-			{ "vibratospeed",	0		},
-			{ "vibratodepth",	0		},
-			{ "attack",			0.01	},
-			{ "decay",			0.5		},
-			{ "sustain",		0.5		},
-			{ "release",		0.2		},
-			{ "sync",			0		},
-			{ "ringmod",		0		},
-			{ "filter",			0		},
-			{ "resonance",		15		},
-			{ "cutoff",			20		},
-			{ "gliss",			0		},
-			{ "pulsewidthsweep",0		},
-		}
-	};
-	for (auto& chan : _channels) {
-		chan.init();
-		apply_macro(default_macro, chan);
-	}
-}
-
 void Server::play(int block, bool looping) {
 	std::lock_guard<std::mutex> guard(_mutex);
 	_playing = true;
@@ -96,7 +66,8 @@ void Server::play(int block, bool looping) {
 	_frame = 0;
 	_tick = 0;
 	_row = 0;
-	init_channels();
+	for (auto& chan : _channels) chan.init();
+	_fx.init();
 }
 
 void Server::pause() {
@@ -168,8 +139,7 @@ void Server::tick() {
 bool Server::apply_macro(const Macro& macro, Channel& chan) const {
 	int res = true;
 	for (auto& m : macro.parents) res &= apply_macro(m, chan);
-	for (auto& p : macro.envs) res &= chan.set_param_env(p.first, p.second);
-	return res;
+	return res & chan.set_param_envs(macro.envs);
 }
 
 bool Server::apply_macro(const std::string& macro_name, Channel& chan) const {
@@ -203,10 +173,14 @@ void Server::mix(short* buffer, int length) {
 				}
 			}
 		}
+
 		float frame[2] = { 0, 0 };
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
-			_channels[i].add_mix(frame, _channels[(i + CHANNEL_COUNT - 1) % CHANNEL_COUNT]);
+			_channels[i].add_mix(frame, _channels[(i + CHANNEL_COUNT - 1) % CHANNEL_COUNT], _fx);
 		}
+		_fx.add_mix(frame);
+
+
 		buffer[i + 0] = clamp((int) (frame[0] * 8000), -32768, 32767);
 		buffer[i + 1] = clamp((int) (frame[1] * 8000), -32768, 32767);
 	}

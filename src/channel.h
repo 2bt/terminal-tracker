@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include "param.h"
+#include "fx.h"
 
 
 template <typename T>
@@ -15,14 +16,16 @@ public:
 	Channel() { init(); }
 
 	void init();
-	bool set_param_env(std::string name, Envelope env);
+	bool set_param_envs(const EnvelopeMap& envs);
 	void note_event(int note);
 	void tick();
-	void add_mix(float frame[2], const Channel& modulator);
+	void add_mix(float* frame, const Channel& modulator, FX& fx);
 
 	float get_level() const { return _level * _volume; }
 
 private:
+	bool set_param_env(std::string name, const Envelope& env);
+
 	enum class State { OFF, RELEASE, ATTACK, HOLD };
 	enum class Wave { PULSE, TRIANGLE, SINE, NOISE, C64NOISE };
 
@@ -66,6 +69,8 @@ private:
 	float			_filter_b;
 	float			_filter_h;
 
+	float			_echo;
+
 
 	enum class ParamID {
 		WAVE,
@@ -90,6 +95,8 @@ private:
 		FILTER,
 		CUTOFF,
 		RESONANCE,
+
+		ECHO,
 
 		PARAM_COUNT
 	};

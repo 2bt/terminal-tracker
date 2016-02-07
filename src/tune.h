@@ -35,9 +35,11 @@ struct Envelope {
 	Envelope() : nodes(), loop(-1) {}
 };
 
+typedef	std::map<std::string,Envelope>			EnvelopeMap;
+
 struct Macro {
 	std::vector<std::string> 			parents;
-	std::map<std::string,Envelope>		envs;
+	EnvelopeMap							envs;
 };
 
 typedef std::vector<Row>						Pattern;
