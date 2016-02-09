@@ -1,16 +1,13 @@
-#include <ctype.h>
+#include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <unistd.h>
 #include <sys/inotify.h>
-
 #include "tune.h"
 #include "messagewin.h"
 #include "patternwin.h"
 #include "styles.h"
-
 #include "server.h"
-
-
 
 
 static Tune tune = { {}, {}, {}, 800, 8, };
