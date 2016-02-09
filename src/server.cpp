@@ -62,10 +62,12 @@ void Server::play(int block, bool looping) {
 	std::lock_guard<std::mutex> guard(_mutex);
 	_playing = true;
 	_blockloop = looping;
-	_block = block;
 	_frame = 0;
 	_tick = 0;
-	_row = 0;
+	if (block >= 0) { // don't play from current row
+		_block = block;
+		_row = 0;
+	}
 	for (auto& chan : _channels) chan.init();
 	_fx.init();
 }
@@ -76,21 +78,15 @@ void Server::pause() {
 	for (auto& chan : _channels) chan.note_event(-1);
 }
 
-Row* Server::get_nearest_row(int chan_nr) {
-	int row = _row;
-	int block = _block;
+void Server::get_nearest_row(int& block_nr, int& row_nr) const {
+	row_nr = _row;
+	block_nr = _block;
 	if (_tick >= _ticks_per_row.val() / 2) {
-		if (++row >= get_max_rows(*_tune, _block)) {
-			row = 0;
-			if (!_blockloop && ++block >= (int) _tune->table.size()) block = 0;
+		if (++row_nr >= get_max_rows(*_tune, _block)) {
+			row_nr = 0;
+			if (!_blockloop && ++block_nr >= (int) _tune->table.size()) block_nr = 0;
 		}
 	}
-	auto& pn = _tune->table[block][chan_nr];
-	auto it = _tune->patterns.find(pn);
-	if (it == _tune->patterns.end()) return nullptr;
-	auto& pat = it->second;
-	if (row >= (int) pat.size()) return nullptr;
-	return &pat[row];
 }
 
 void Server::play_row(int chan_nr, const Row& row) {
@@ -120,7 +116,7 @@ void Server::tick() {
 		_ticks_per_row.tick();
 		_param_batch.tick([this](const std::string name, float v) {
 			if (name == "echo_length") {
-				_fx._echo_length = _tune->frames_per_tick * clamp<int>(v, 0.1, FX::MAX_ECHO_LENGTH);
+				_fx._echo_length = clamp<int>(_tune->frames_per_tick * v, 100, FX::MAX_ECHO_LENGTH);
 			}
 			else if (name == "echo_feedback") {
 				_fx._echo_feedback = clamp<float>(v, 0, 0.99);

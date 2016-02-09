@@ -29,7 +29,7 @@ public:
 
 	float	get_chan_level(int chan_nr) const { return _channels[chan_nr].get_level(); }
 
-	Row*	get_nearest_row(int chan_nr);
+	void	get_nearest_row(int& block_nr, int& row_nr) const;
 	void	play_row(int chan_nr, const Row& row);
 
 private:
