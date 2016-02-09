@@ -24,13 +24,12 @@ struct Envelope {
 	struct Node {
 		float value;
 		bool delta;
-		Node(float v, bool d) : value(v), delta(d) {}
-		Node(float v) : value(v), delta(false) {}
+		Node(float v, bool d=false) : value(v), delta(d) {}
 	};
 	std::vector<Node> nodes;
 	int loop;
 	Envelope(std::vector<Node> n={}, int l=-1) : nodes(n), loop(l) {}
-	Envelope(float v) : nodes({v}), loop(-1) {}
+	Envelope(float v) : nodes({Node(v)}), loop(-1) {}
 };
 
 typedef	std::map<std::string,Envelope>			EnvelopeMap;

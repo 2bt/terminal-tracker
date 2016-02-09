@@ -283,7 +283,7 @@ static void write_env(FILE* f, const Envelope& env) {
 			p--;
 		}
 		if (*p == '.') *p = '\0';
-		fprintf(f, line);
+		fprintf(f, "%s", line);
 	}
 }
 

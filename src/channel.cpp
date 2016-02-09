@@ -105,9 +105,9 @@ void Channel::tick() {
 		case PID_VIBRATO_DEPTH:	_vibrato_depth	= v; break;
 
 		case PID_ATTACK:			_attack			= 1.0 / 44100 / clamp(v); break;
-		case PID_DECAY:				_decay			= exp(log(0.01) / 44100 / v); break;
+		case PID_DECAY:				_decay			= expf(log(0.01) / 44100 / v); break;
 		case PID_SUSTAIN:			_sustain		= clamp(v); break;
-		case PID_RELEASE:			_release		= exp(log(0.01) / 44100 / v); break;
+		case PID_RELEASE:			_release		= expf(log(0.01) / 44100 / v); break;
 
 		case PID_SYNC:				_sync			= v > 0; break;
 		case PID_RINGMOD:			_ringmod		= clamp(v); break;
