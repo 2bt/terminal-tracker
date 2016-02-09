@@ -26,6 +26,7 @@ Libs you'll need:
 - `libSDL`
 - `libportmidi`
 - `libsndfile`
+- `libuv`
 
 
 Try it out:

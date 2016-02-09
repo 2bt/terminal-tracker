@@ -1,5 +1,5 @@
 CF = -Wall --std=c++11 -I PEGTL/ -O2
-LF = -Wall --std=c++11 -lncurses -lSDL -lportmidi -lsndfile
+LF = -Wall --std=c++11 -lncurses -lSDL -lportmidi -lsndfile -luv
 
 CC = clang++
 

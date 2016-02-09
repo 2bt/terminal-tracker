@@ -136,7 +136,6 @@ static std::string& strip_dots(std::string& w) {
 }
 
 
-
 bool load_tune(Tune& tune, const char* name) {
 	FILE* f = fopen(name, "r");
 	if (!f) return false;
