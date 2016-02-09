@@ -31,5 +31,6 @@ Libs you'll need:
 Try it out:
 
 	$ git submodule init
+	$ git submodule update
 	$ make
 	$ ./tt tunes/area2.x	# press space to play
