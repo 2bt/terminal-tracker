@@ -10,12 +10,12 @@ class EditCommand {
 public:
 	enum Execution { ECE_DO, ECE_UNDO, ECE_REDO };
 	enum Type {
-		ECT_SET_NOTE,
-		ECT_SET_MACRO,
-		ECT_SET_ROW,
-		ECT_SET_ROW_AT,
-		ECT_YANK_REGION,
-		ECT_PASTE_REGION,
+		SET_NOTE,
+		SET_MACRO,
+		SET_ROW,
+		SET_ROW_AT,
+		YANK_REGION,
+		PASTE_REGION,
 
 		// TODO:
 		// add/delete row
@@ -57,7 +57,7 @@ public:
 		_index = index;
 	}
 
-	bool exec(PatternWin& win, Execution ece=ECE_DO);
+	bool exec(PatternWin& win, Execution e=ECE_DO);
 
 private:
 	void _restore_cursor(PatternWin& win) const;
@@ -70,7 +70,6 @@ private:
 	Row		_prev_row;
 	int		_index;
 	int		_clear;
-	int		_x0, _x1, _y0, _y1;
 	std::vector<Pattern>	_region;
 	std::vector<Pattern>	_prev_region;
 	std::vector<int>		_length_diffs;

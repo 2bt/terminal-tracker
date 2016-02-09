@@ -133,7 +133,7 @@ START:
 //		mvprintw(LINES - 1, COLS - 24, "%3d %-20s", och, keyname(och));
 
 		refresh();
-    }
+	}
 	return 0;
 }
 

@@ -7,12 +7,11 @@
 #include "patternwin.h"
 #include "styles.h"
 
+
 bool operator==(const Row& a, const Row& b) {
 	return a.note == b.note && a.macros == b.macros;
 }
-bool operator!=(const Row& a, const Row& b) {
-	return !(a == b);
-}
+bool operator!=(const Row& a, const Row& b) { return !(a == b); }
 
 void EditCommand::_restore_cursor(PatternWin& win) const {
 	win._cursor_x = _cursor_x;
@@ -21,8 +20,9 @@ void EditCommand::_restore_cursor(PatternWin& win) const {
 	win._scroll();
 }
 
-
-bool paste_region(Tune& tune, int block_nr, int x, int y, const std::vector<Pattern>& src, std::vector<int>* length_diffs=nullptr) {
+bool paste_region(Tune& tune, int block_nr, int x, int y,
+				  const std::vector<Pattern>& src, std::vector<int>* length_diffs=nullptr)
+{
 	if (length_diffs) length_diffs->resize(src.size());
 	bool same = true;
 	auto& line = tune.table[block_nr];
@@ -50,7 +50,9 @@ bool paste_region(Tune& tune, int block_nr, int x, int y, const std::vector<Patt
 }
 
 
-bool yank_region(Tune& tune, int block_nr, int x0, int y0, int x1, int y1, std::vector<Pattern>& dst, bool clear=false) {
+bool yank_region(Tune& tune, int block_nr, int x0, int y0, int x1, int y1,
+				 std::vector<Pattern>& dst, bool clear=false)
+{
 	int same = true;
 	auto& line = tune.table[block_nr];
 	dst.resize(x1 - x0);
@@ -75,9 +77,9 @@ bool yank_region(Tune& tune, int block_nr, int x0, int y0, int x1, int y1, std::
 }
 
 
-bool EditCommand::exec(PatternWin& win, Execution ece) {
-	if (ece == ECE_DO) {
-		if (_type == ECT_SET_ROW_AT) {
+bool EditCommand::exec(PatternWin& win, Execution e) {
+	if (e == ECE_DO) {
+		if (_type == SET_ROW_AT) {
 			_cursor_x	= win._cursor_x;
 		}
 		else {
@@ -86,11 +88,9 @@ bool EditCommand::exec(PatternWin& win, Execution ece) {
 			_cursor_y1	= win._cursor_y1;
 		}
 
-		if (_type == ECT_YANK_REGION) {
-			_x0 = win._mark_x_begin();
-			_x1 = win._mark_x_end();
-			_y0 = win._mark_y_begin();
-			_y1 = win._mark_y_end();
+		if (_type == YANK_REGION) {
+			_cursor_x = win._mark_x_begin();
+			_cursor_y1 = win._mark_y_begin();
 		}
 	}
 
@@ -102,12 +102,12 @@ bool EditCommand::exec(PatternWin& win, Execution ece) {
 
 
 	switch (_type) {
-	case ECT_SET_ROW:
-	case ECT_SET_ROW_AT:
+	case SET_ROW:
+	case SET_ROW_AT:
 		if (!row) return false;
-		if (ece == ECE_DO) _prev_row = *row;
+		if (e == ECE_DO) _prev_row = *row;
 		else _restore_cursor(win);
-		if (ece != ECE_UNDO) {
+		if (e != ECE_UNDO) {
 			if (*row == _row) return false;
 			*row = _row;
 		}
@@ -115,15 +115,15 @@ bool EditCommand::exec(PatternWin& win, Execution ece) {
 		return true;
 
 
-	case ECT_SET_MACRO:
+	case SET_MACRO:
 		if (!row) return false;
-		if (ece == ECE_DO) {
+		if (e == ECE_DO) {
 			_prev_row = *row;
 			_row = *row;
 			_row.macros[_index] = win._macro;
 		}
 		else _restore_cursor(win);
-		if (ece != ECE_UNDO) {
+		if (e != ECE_UNDO) {
 			if (*row == _row) return false;
 			*row = _row;
 		}
@@ -131,20 +131,22 @@ bool EditCommand::exec(PatternWin& win, Execution ece) {
 		return true;
 
 
-	case ECT_YANK_REGION:
-		if (ece == ECE_DO) {
-			if (yank_region(*win._tune, _cursor_y0, _x0, _y0, _x1, _y1, win._pattern_buffer, _clear)) return false;
+	case YANK_REGION:
+		if (e == ECE_DO) {
+			int xe = win._mark_x_end();
+			int ye = win._mark_y_end();
+			if (yank_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, xe, ye, win._pattern_buffer, _clear)) return false;
 			_prev_region = win._pattern_buffer;
-			yank_region(*win._tune, _cursor_y0, _x0, _y0, _x1, _y1, _region);
+			yank_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, xe, ye, _region);
 		}
 		else _restore_cursor(win);
-		if (ece == ECE_UNDO) paste_region(*win._tune, _cursor_y0, _x0, _y0, _prev_region);
-		else if (ece == ECE_REDO) paste_region(*win._tune, _cursor_y0, _x0, _y0, _region);
+		if (e == ECE_UNDO) paste_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _prev_region);
+		else if (e == ECE_REDO) paste_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _region);
 		return true;
 
 
-	case ECT_PASTE_REGION:
-		if (ece == ECE_DO) {
+	case PASTE_REGION:
+		if (e == ECE_DO) {
 			_region = win._pattern_buffer;
 			int len = 0;
 			for (auto& b : _region) len = std::max(len, (int) b.size());
@@ -152,7 +154,7 @@ bool EditCommand::exec(PatternWin& win, Execution ece) {
 			if (paste_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _region, &_length_diffs)) return false;
 		}
 		else _restore_cursor(win);
-		if (ece == ECE_UNDO) {
+		if (e == ECE_UNDO) {
 			paste_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _prev_region);
 			// trim patterns
 			for (int c = 0; c < _region.size(); c++) {
@@ -163,7 +165,7 @@ bool EditCommand::exec(PatternWin& win, Execution ece) {
 				}
 			}
 		}
-		else if (ece == ECE_REDO) paste_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _region);
+		else if (e == ECE_REDO) paste_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _region);
 		return true;
 
 
@@ -469,6 +471,8 @@ void PatternWin::key(int ch) {
 	}
 }
 
+typedef EditCommand EC;
+
 void PatternWin::_key_pattern_name(int ch) {
 	auto& line = _tune->table[_cursor_y0];
 	auto& pat_name = line[_cursor_x];
@@ -515,7 +519,7 @@ void PatternWin::_key_macro_name(int ch) {
 		_edit_mode = EM_NORMAL;
 		_macro = macro_name;
 		macro_name.assign(_old_name);
-		_edit<EditCommand::ECT_SET_MACRO>(0);
+		_edit<EC::SET_MACRO>(0);
 	}
 }
 
@@ -546,7 +550,7 @@ void PatternWin::_key_mark_pattern(int ch) {
 	case 'd':
 	case KEY_BACKSPACE:
 		_edit_mode = EM_NORMAL;
-		_edit<EditCommand::ECT_YANK_REGION>(ch != 'y');
+		_edit<EC::YANK_REGION>(ch != 'y');
 		break;
 
 	// transpose
@@ -656,7 +660,7 @@ void PatternWin::_key_record(int ch) {
 	if (ch < 32 || ch > 127) return;
 	if (ch == '^') {
 		Row row { -1 };
-		_edit<EditCommand::ECT_SET_ROW_AT>(row, block_nr, row_nr);
+		_edit<EC::SET_ROW_AT>(row, block_nr, row_nr);
 		server.play_row(_cursor_x, row);
 		return;
 	}
@@ -669,7 +673,7 @@ void PatternWin::_key_record(int ch) {
 	if (a) {
 		Row row { n + 1 + _octave * 12 };
 		row.macros[0] = _macro;
-		_edit<EditCommand::ECT_SET_ROW_AT>(row, block_nr, row_nr);
+		_edit<EC::SET_ROW_AT>(row, block_nr, row_nr);
 		server.play_row(_cursor_x, row);
 	}
 }
@@ -691,14 +695,14 @@ void PatternWin::_key_normal(int ch) {
 	case KEY_CTRL_DOWN:	_move_cursor(0, 1, 0); return;
 
 	case KEY_BACKSPACE:
-		_edit<EditCommand::ECT_SET_ROW>(Row());
+		_edit<EC::SET_ROW>(Row());
 		return;
 
 	case '!':			// set 1st macro
-		_edit<EditCommand::ECT_SET_MACRO>(0);
+		_edit<EC::SET_MACRO>(0);
 		return;
 	case '"':			// set 2nd macro
-		_edit<EditCommand::ECT_SET_MACRO>(1);
+		_edit<EC::SET_MACRO>(1);
 		return;
 	case 'I':			// edit _macro name
 		if (row) {
@@ -714,7 +718,7 @@ void PatternWin::_key_normal(int ch) {
 		return;
 
 	case 'P':			// paste pattern
-		_edit<EditCommand::ECT_PASTE_REGION>();
+		_edit<EC::PASTE_REGION>();
 		return;
 
 	case 'X':			// delete row
@@ -812,7 +816,7 @@ void PatternWin::_key_normal(int ch) {
 	if (ch < 32 || ch > 127) return;
 	if (ch == '^') {
 		Row row { -1 };
-		_edit<EditCommand::ECT_SET_ROW>(row);
+		_edit<EC::SET_ROW>(row);
 		server.play_row(_cursor_x, row);
 		return;
 	}
@@ -825,7 +829,7 @@ void PatternWin::_key_normal(int ch) {
 	if (a) {
 		Row row { n + 1 + _octave * 12 };
 		row.macros[0] = _macro;
-		_edit<EditCommand::ECT_SET_ROW>(row);
+		_edit<EC::SET_ROW>(row);
 		server.play_row(_cursor_x, row);
 	}
 }
@@ -862,11 +866,11 @@ void PatternWin::midi(int type, int value) {
 	server.play_row(chan, row);
 
 	if (row.note > 0 && _edit_mode == EM_NORMAL) {
-		_edit<EditCommand::ECT_SET_ROW>(row);
+		_edit<EC::SET_ROW>(row);
 	}
 	else if (_edit_mode == EM_RECORD) {
 
-		// record note off event only of no other voice active
+		// record note off event only if no other voice active
 		if (row.note == -1) {
 			for (int n : _chan_to_note) if (n != -1) return;
 		}
@@ -874,6 +878,6 @@ void PatternWin::midi(int type, int value) {
 		int block_nr;
 		int row_nr;
 		server.get_nearest_row(block_nr, row_nr);
-		_edit<EditCommand::ECT_SET_ROW_AT>(row, block_nr, row_nr);
+		_edit<EC::SET_ROW_AT>(row, block_nr, row_nr);
 	}
 }
