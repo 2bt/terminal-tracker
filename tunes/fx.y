@@ -1,6 +1,6 @@
 
 
-MACRO f
+MACRO f < default
 	volume = 1
 	wave = 1
 	pulsewidth = 0.5
@@ -40,7 +40,7 @@ MACRO sync
 
 
 ## real stuff
-MACRO spdr
+MACRO spdr < default
 	volume = 1
 	attack = 0.01
 	offset = 0 10 | +-5
@@ -87,14 +87,14 @@ MACRO blst_
 	decay = 1.5
 	offset = | 0 (8|+-5)
 
-MACRO cursr
+MACRO cursr < default
 	volume = 0.8
 	attack = 0.01
 	sustain = 1 0
 	offset = -2
 	decay = 0.15
 
-MACRO slct
+MACRO slct < default
 	volume = 0.8
 	attack = 0.03
 	sustain = (8|1) 0
@@ -106,7 +106,7 @@ MACRO slct
 	offset = -10 (3| +0 +0 +5)
 	decay = 0.23
 
-MACRO back
+MACRO back < default
 	volume = 0.8
 	attack = 0.03
 	sustain = 1 1 1 1 1 0
@@ -116,7 +116,7 @@ MACRO back
 	offset = -22 | +0 +0 +10 +0 +0 +0 +-10
 	decay = 0.4
 
-MACRO pause
+MACRO pause < default
 	attack = 0
 	offset = (5|5) (5|0) (5|5) (5|0)
 	sustain = (18|1) 0
@@ -154,7 +154,7 @@ MACRO blt2
 
 
 
-MACRO rckt
+MACRO rckt < default
 	filter = 0
 	volume = 0.4
 	decay = 0
@@ -163,7 +163,7 @@ MACRO rckt
 	offset = | 0 0 12 12
 
 
-MACRO spr
+MACRO spr < default
 	volume = 0.4
 	attack = 0
 	offset = | 0 -1 -2 -3 -4 -5
@@ -172,7 +172,7 @@ MACRO spr
 	pulsewidth = 0.04 | (18|+0.04) (18|+-0.04)
 	wave = 0
 
-MACRO coin
+MACRO coin < default
 	pulsewidth = 0.5
 	volume = 0.5
 	wave = 4 1
@@ -181,7 +181,7 @@ MACRO coin
 	decay = 0.2
 
 
-MACRO hit
+MACRO hit < default
 	volume = 0.8
 	wave = 1 4 1 | 1 1 1 4
 	offset = 0 4  -8 -8  -17  | 0 -8  -17 -17
@@ -210,7 +210,7 @@ MACRO ns2
 
 
 # moons enemy shoot
-MACRO mns
+MACRO mns < default
 	volume = 1
 	attack = 0
 	pulsewidth	= | (4|0.02) (4|0.5)
@@ -221,7 +221,7 @@ MACRO mns
 
 
 # moons item collect
-MACRO coll
+MACRO coll < default
 	volume = 0.4
 	offset = 0 0 0 3 3 3 8 8 8 12 12 12 15 15 15 20
 	wave = 0
@@ -241,7 +241,7 @@ MACRO colls
 
 
 # moons item drop
-MACRO drop
+MACRO drop < default
 	volume = 0.6
 	offset = 0 0 7 7 12 12 16 16 12
 	wave = 0
@@ -251,7 +251,7 @@ MACRO drop
 
 
 # turrican 2 laser
-MACRO nl
+MACRO nl < default
 	volume	= 0.2
 	wave	= 4
 	sustain = 1 1 0
