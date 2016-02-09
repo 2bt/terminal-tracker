@@ -14,6 +14,15 @@ public:
 		ECT_SET_MACRO,
 		ECT_SET_ROW,
 		ECT_SET_ROW_AT,
+		ECT_YANK_REGION,
+		ECT_PASTE_REGION,
+
+		// TODO:
+		// add/delete row
+		// add/delete block
+		// pattern renaming
+
+
 	};
 
 
@@ -26,6 +35,12 @@ public:
 	void init(const Row& row) {
 		_type = type;
 		_row = row;
+	}
+
+	template <Type type>
+	void init(bool clear) {
+		_type = type;
+		_clear = clear;
 	}
 
 	template <Type type>
@@ -54,6 +69,11 @@ private:
 	Row		_row;
 	Row		_prev_row;
 	int		_index;
+	int		_clear;
+	int		_x0, _x1, _y0, _y1;
+	std::vector<Pattern>	_region;
+	std::vector<Pattern>	_prev_region;
+	std::vector<int>		_length_diffs;
 };
 
 

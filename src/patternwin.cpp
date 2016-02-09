@@ -10,6 +10,9 @@
 bool operator==(const Row& a, const Row& b) {
 	return a.note == b.note && a.macros == b.macros;
 }
+bool operator!=(const Row& a, const Row& b) {
+	return !(a == b);
+}
 
 void EditCommand::_restore_cursor(PatternWin& win) const {
 	win._cursor_x = _cursor_x;
@@ -18,12 +21,76 @@ void EditCommand::_restore_cursor(PatternWin& win) const {
 	win._scroll();
 }
 
+
+bool paste_region(Tune& tune, int block_nr, int x, int y, const std::vector<Pattern>& src, std::vector<int>* length_diffs=nullptr) {
+	if (length_diffs) length_diffs->resize(src.size());
+	bool same = true;
+	auto& line = tune.table[block_nr];
+	for (int c = 0; c < (int) src.size(); c++) {
+		auto it = tune.patterns.find(line[(x + c) % CHANNEL_COUNT]);
+		if (it != tune.patterns.end()) {
+			auto& pat = it->second;
+			auto& buffer = src[c];
+
+			if (length_diffs) length_diffs->at(c) = 0;
+			if (pat.size() < y + buffer.size()) {
+				if (length_diffs) length_diffs->at(c) = y + buffer.size() - pat.size();
+				pat.resize(y + buffer.size());
+				same = false;
+			}
+			for (int i = 0; i < (int) buffer.size(); i++) {
+				if (pat[y + i] != buffer[i]) {
+					pat[y + i] = buffer[i];
+					same = false;
+				}
+			}
+		}
+	}
+	return same;
+}
+
+
+bool yank_region(Tune& tune, int block_nr, int x0, int y0, int x1, int y1, std::vector<Pattern>& dst, bool clear=false) {
+	int same = true;
+	auto& line = tune.table[block_nr];
+	dst.resize(x1 - x0);
+	for (int c = x0; c < x1; c++) {
+		auto& buffer = dst[c - x0];
+		buffer.clear();
+		auto it = tune.patterns.find(line[c]);
+		if (it != tune.patterns.end()) {
+			auto& pat = it->second;
+			for (int i = y0; i < y1 && i < (int) pat.size(); i++) {
+				buffer.push_back(pat[i]);
+				if (clear) {
+					if (pat[i] != Row()) {
+						pat[i] = Row();
+						same = false;
+					}
+				}
+			}
+		}
+	}
+	return same;
+}
+
+
 bool EditCommand::exec(PatternWin& win, Execution ece) {
 	if (ece == ECE_DO) {
-		_cursor_x	= win._cursor_x;
-		if (_type != ECT_SET_ROW_AT) {
+		if (_type == ECT_SET_ROW_AT) {
+			_cursor_x	= win._cursor_x;
+		}
+		else {
+			_cursor_x	= win._cursor_x;
 			_cursor_y0	= win._cursor_y0;
 			_cursor_y1	= win._cursor_y1;
+		}
+
+		if (_type == ECT_YANK_REGION) {
+			_x0 = win._mark_x_begin();
+			_x1 = win._mark_x_end();
+			_y0 = win._mark_y_begin();
+			_y1 = win._mark_y_end();
 		}
 	}
 
@@ -61,6 +128,42 @@ bool EditCommand::exec(PatternWin& win, Execution ece) {
 			*row = _row;
 		}
 		else *row = _prev_row;
+		return true;
+
+
+	case ECT_YANK_REGION:
+		if (ece == ECE_DO) {
+			if (yank_region(*win._tune, _cursor_y0, _x0, _y0, _x1, _y1, win._pattern_buffer, _clear)) return false;
+			_prev_region = win._pattern_buffer;
+			yank_region(*win._tune, _cursor_y0, _x0, _y0, _x1, _y1, _region);
+		}
+		else _restore_cursor(win);
+		if (ece == ECE_UNDO) paste_region(*win._tune, _cursor_y0, _x0, _y0, _prev_region);
+		else if (ece == ECE_REDO) paste_region(*win._tune, _cursor_y0, _x0, _y0, _region);
+		return true;
+
+
+	case ECT_PASTE_REGION:
+		if (ece == ECE_DO) {
+			_region = win._pattern_buffer;
+			int len = 0;
+			for (auto& b : _region) len = std::max(len, (int) b.size());
+			yank_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _cursor_x + _region.size(), _cursor_y1 + len, _prev_region);
+			if (paste_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _region, &_length_diffs)) return false;
+		}
+		else _restore_cursor(win);
+		if (ece == ECE_UNDO) {
+			paste_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _prev_region);
+			// trim patterns
+			for (int c = 0; c < _region.size(); c++) {
+				auto it = win._tune->patterns.find(line[_cursor_x + c]);
+				if (it != win._tune->patterns.end()) {
+					auto& pat = it->second;
+					pat.resize(pat.size() - _length_diffs[c]);
+				}
+			}
+		}
+		else if (ece == ECE_REDO) paste_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _region);
 		return true;
 
 
@@ -411,6 +514,8 @@ void PatternWin::_key_macro_name(int ch) {
 	else if (ch == '\n') {
 		_edit_mode = EM_NORMAL;
 		_macro = macro_name;
+		macro_name.assign(_old_name);
+		_edit<EditCommand::ECT_SET_MACRO>(0);
 	}
 }
 
@@ -441,22 +546,7 @@ void PatternWin::_key_mark_pattern(int ch) {
 	case 'd':
 	case KEY_BACKSPACE:
 		_edit_mode = EM_NORMAL;
-		_pattern_buffer.resize(_mark_x_end() - _mark_x_begin());
-		for (int c = _mark_x_begin(); c < _mark_x_end(); c++) {
-			auto& buffer = _pattern_buffer[c - _mark_x_begin()];
-			buffer.clear();
-			auto it = _tune->patterns.find(line[c]);
-			if (it != _tune->patterns.end()) {
-				auto& pat = it->second;
-				for (int i = _mark_y_begin(); i < _mark_y_end() && i < (int) pat.size(); i++) {
-					buffer.push_back(pat[i]);
-					if (ch != 'y') pat[i] = Row();
-				}
-			}
-		}
-		_cursor_x = _mark_x;
-		_cursor_y1 = _mark_y;
-		_scroll();
+		_edit<EditCommand::ECT_YANK_REGION>(ch != 'y');
 		break;
 
 	// transpose
@@ -510,12 +600,12 @@ void PatternWin::_key_rec_norm_common(int ch) {
 		}
 		break;
 
-	case ' ':	// continue playing
+	case '\0':	// continue playing
 		if (server.is_playing()) server.pause();
 		else server.play(-1);
 		break;
 
-	case '\0':	// play from the begining current block
+	case ' ':	// play from the begining current block
 		if (server.is_playing()) server.pause();
 		else server.play(_cursor_y0);
 		break;
@@ -624,17 +714,7 @@ void PatternWin::_key_normal(int ch) {
 		return;
 
 	case 'P':			// paste pattern
-		for (int b = 0; b < (int) _pattern_buffer.size(); b++) {
-			auto it = _tune->patterns.find(line[(_cursor_x + b) % CHANNEL_COUNT]);
-			if (it != _tune->patterns.end()) {
-				auto& pat = it->second;
-				auto& buffer = _pattern_buffer[b];
-				if (pat.size() < _cursor_y1 + buffer.size()) pat.resize(_cursor_y1 + buffer.size());
-				for (int i = 0; i < (int) buffer.size(); i++) {
-					pat[_cursor_y1 + i] = buffer[i];
-				}
-			}
-		}
+		_edit<EditCommand::ECT_PASTE_REGION>();
 		return;
 
 	case 'X':			// delete row
@@ -705,8 +785,6 @@ void PatternWin::_key_normal(int ch) {
 			}
 		}
 		return;
-
-
 
 	case KEY_TAB:
 		_edit_mode = EM_RECORD;
