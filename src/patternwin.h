@@ -13,16 +13,16 @@ public:
 		SET_NOTE,
 		SET_MACRO,
 		SET_ROW,
-		SET_ROW_AT,
+		RECORD_ROW,
 		YANK_REGION,
 		PASTE_REGION,
-
+		TRANSPOSE_REGION,
+		DELETE_ROW,
+		INSERT_ROW,
+		DELETE_LINE,
+		INSERT_LINE,
 		// TODO:
-		// add/delete row
-		// add/delete block
 		// pattern renaming
-
-
 	};
 
 
@@ -41,14 +41,6 @@ public:
 	void init(bool clear) {
 		_type = type;
 		_clear = clear;
-	}
-
-	template <Type type>
-	void init(const Row& row, int block_nr, int row_nr) {
-		_type = type;
-		_row = row;
-		_cursor_y0 = block_nr;
-		_cursor_y1 = row_nr;
 	}
 
 	template <Type type>
@@ -73,6 +65,7 @@ private:
 	std::vector<Pattern>	_region;
 	std::vector<Pattern>	_prev_region;
 	std::vector<int>		_length_diffs;
+	TableLine				_prev_line;
 };
 
 
@@ -152,7 +145,7 @@ private:
 	int				_chan_to_note[CHANNEL_COUNT];
 
 
-	std::array<EditCommand,256>	_cmds;
+	std::array<EditCommand,1024>	_cmds;
 	int _cmd_head = 0;
 	int _cmd_tail = 0;
 	int _cmd_index = 0;

@@ -5,8 +5,8 @@
 void Server::init(Tune* tune, MidiCallback callback) {
 	_tune = tune;
 	_playing = false;
-	_blockloop = false;
-	_block = 0;
+	_lineloop = false;
+	_line = 0;
 	_frame = 0;
 	_tick = 0;
 	_row = 0;
@@ -26,7 +26,7 @@ void Server::generate_full_log() {
 	do {
 		mix(buffer, _tune->frames_per_tick * 2);
 	}
-	while (!(_frame == 0 && _tick == 0 && _row == 0 && _block == 0));
+	while (!(_frame == 0 && _tick == 0 && _row == 0 && _line == 0));
 	pause();
 }
 
@@ -58,14 +58,14 @@ Server::~Server() {
 	Pm_Terminate();
 }
 
-void Server::play(int block, bool looping) {
+void Server::play(int line, bool looping) {
 	std::lock_guard<std::mutex> guard(_mutex);
 	_playing = true;
-	_blockloop = looping;
+	_lineloop = looping;
 	_frame = 0;
 	_tick = 0;
-	if (block >= 0) { // don't play from current row
-		_block = block;
+	if (line >= 0) { // don't play from current row
+		_line = line;
 		_row = 0;
 	}
 	for (auto& chan : _channels) chan.init();
@@ -78,13 +78,13 @@ void Server::pause() {
 	for (auto& chan : _channels) chan.note_event(-1);
 }
 
-void Server::get_nearest_row(int& block_nr, int& row_nr) const {
+void Server::get_nearest_row(int& line_nr, int& row_nr) const {
 	row_nr = _row;
-	block_nr = _block;
+	line_nr = _line;
 	if (_tick >= _ticks_per_row.val() / 2) {
-		if (++row_nr >= get_max_rows(*_tune, _block)) {
+		if (++row_nr >= get_max_rows(*_tune, _line)) {
 			row_nr = 0;
-			if (!_blockloop && ++block_nr >= (int) _tune->table.size()) block_nr = 0;
+			if (!_lineloop && ++line_nr >= (int) _tune->table.size()) line_nr = 0;
 		}
 	}
 }
@@ -125,7 +125,7 @@ void Server::tick() {
 	}
 
 	// tick channels
-	auto& line = _tune->table[_block];
+	auto& line = _tune->table[_line];
 	for (int i = 0; i < CHANNEL_COUNT; i++) {
 		auto& chan = _channels[i];
 		if (_playing && !_muted[i] && _tick == 0) {
@@ -170,13 +170,13 @@ void Server::mix(short* buffer, int length) {
 			if (_playing) {
 				if (++_tick >= _ticks_per_row.val()) {
 					_tick = 0;
-					if (++_row >= get_max_rows(*_tune, _block)) {
+					if (++_row >= get_max_rows(*_tune, _line)) {
 						_row = 0;
-						if (!_blockloop && (++_block >= (int) _tune->table.size()
-						|| _tune->table[_block] == TableLine())) {
-							if (_tune->table.size() < 2) _block = 0;
-							else while (--_block > 0) { // find empty table line
-								if (_tune->table[_block - 1] == TableLine()) break;
+						if (!_lineloop && (++_line >= (int) _tune->table.size()
+						|| _tune->table[_line] == TableLine())) {
+							if (_tune->table.size() < 2) _line = 0;
+							else while (--_line > 0) { // find empty table line
+								if (_tune->table[_line - 1] == TableLine()) break;
 							}
 
 						}

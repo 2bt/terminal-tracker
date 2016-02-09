@@ -14,18 +14,20 @@ bool operator==(const Row& a, const Row& b) {
 bool operator!=(const Row& a, const Row& b) { return !(a == b); }
 
 void EditCommand::_restore_cursor(PatternWin& win) const {
-	win._cursor_x = _cursor_x;
 	win._cursor_y0 = _cursor_y0;
-	win._cursor_y1 = _cursor_y1;
+	win._cursor_x = _cursor_x;
+	if (_type != DELETE_LINE && _type != INSERT_LINE) {
+		win._cursor_y1 = _cursor_y1;
+	}
 	win._scroll();
 }
 
-bool paste_region(Tune& tune, int block_nr, int x, int y,
+bool paste_region(Tune& tune, int line_nr, int x, int y,
 				  const std::vector<Pattern>& src, std::vector<int>* length_diffs=nullptr)
 {
 	if (length_diffs) length_diffs->resize(src.size());
 	bool same = true;
-	auto& line = tune.table[block_nr];
+	auto& line = tune.table[line_nr];
 	for (int c = 0; c < (int) src.size(); c++) {
 		auto it = tune.patterns.find(line[(x + c) % CHANNEL_COUNT]);
 		if (it != tune.patterns.end()) {
@@ -50,11 +52,11 @@ bool paste_region(Tune& tune, int block_nr, int x, int y,
 }
 
 
-bool yank_region(Tune& tune, int block_nr, int x0, int y0, int x1, int y1,
+bool yank_region(Tune& tune, int line_nr, int x0, int y0, int x1, int y1,
 				 std::vector<Pattern>& dst, bool clear=false)
 {
 	int same = true;
-	auto& line = tune.table[block_nr];
+	auto& line = tune.table[line_nr];
 	dst.resize(x1 - x0);
 	for (int c = x0; c < x1; c++) {
 		auto& buffer = dst[c - x0];
@@ -79,8 +81,14 @@ bool yank_region(Tune& tune, int block_nr, int x0, int y0, int x1, int y1,
 
 bool EditCommand::exec(PatternWin& win, Execution e) {
 	if (e == ECE_DO) {
-		if (_type == SET_ROW_AT) {
-			_cursor_x	= win._cursor_x;
+		if (_type == RECORD_ROW) {
+			server.get_nearest_row(_cursor_y0, _cursor_y1);
+			_cursor_x = win._cursor_x;
+		}
+		else if (_type == YANK_REGION || _type == TRANSPOSE_REGION) {
+			_cursor_x	= win._mark_x_begin();
+			_cursor_y0	= win._cursor_y0;
+			_cursor_y1	= win._mark_y_begin();
 		}
 		else {
 			_cursor_x	= win._cursor_x;
@@ -88,22 +96,20 @@ bool EditCommand::exec(PatternWin& win, Execution e) {
 			_cursor_y1	= win._cursor_y1;
 		}
 
-		if (_type == YANK_REGION) {
-			_cursor_x = win._mark_x_begin();
-			_cursor_y1 = win._mark_y_begin();
-		}
 	}
 
 
-	auto& line = win._tune->table[_cursor_y0];
+	auto& table = win._tune->table;
+	auto& patterns = win._tune->patterns;
+	auto& line = table[_cursor_y0];
 	auto& pat_name = line[_cursor_x];
-	auto pat = win._tune->patterns.count(pat_name) ? &win._tune->patterns[pat_name] : nullptr;
+	auto pat = patterns.count(pat_name) ? &patterns[pat_name] : nullptr;
 	auto row = (pat && _cursor_y1 < (int) pat->size()) ? &pat->at(_cursor_y1) : nullptr;
 
 
 	switch (_type) {
 	case SET_ROW:
-	case SET_ROW_AT:
+	case RECORD_ROW:
 		if (!row) return false;
 		if (e == ECE_DO) _prev_row = *row;
 		else _restore_cursor(win);
@@ -131,17 +137,55 @@ bool EditCommand::exec(PatternWin& win, Execution e) {
 		return true;
 
 
+	case DELETE_ROW:
+		if (e == ECE_DO) {
+			if (!pat || pat->size() <= 1) return false;
+			_cursor_y1 = win._cursor_y1 = _index;
+			if (_cursor_y1 >= (int) pat->size() - 1) {
+				_cursor_y1 = win._cursor_y1 = pat->size() - 1;
+			}
+			_prev_row = pat->at(_cursor_y1);
+		}
+		else _restore_cursor(win);
+		if (e != ECE_UNDO) {
+			pat->erase(pat->begin() + _cursor_y1);
+			if (_cursor_y1 > (int) pat->size() - 1) win._move_cursor(0, 0, -1);
+		}
+		else pat->insert(pat->begin() + _cursor_y1, _prev_row);
+		return true;
+
+
+	case INSERT_ROW:
+		if (!pat) return false;
+		if (e == ECE_DO) {
+			if (_cursor_y1 >= (int) pat->size()) {
+				_cursor_y1 = win._cursor_y1 = pat->size();
+			}
+		}
+		else _restore_cursor(win);
+		if (e != ECE_UNDO) {
+			pat->insert(pat->begin() + _cursor_y1, Row());
+		}
+		else {
+			pat->erase(pat->begin() + _cursor_y1);
+			if (_cursor_y1 > (int) pat->size() - 1) win._move_cursor(0, 0, -1);
+		}
+		return true;
+
+
+
 	case YANK_REGION:
 		if (e == ECE_DO) {
 			int xe = win._mark_x_end();
 			int ye = win._mark_y_end();
-			if (yank_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, xe, ye, win._pattern_buffer, _clear)) return false;
+			if (yank_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, xe, ye,
+				win._pattern_buffer, _clear)) return false;
 			_prev_region = win._pattern_buffer;
 			yank_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, xe, ye, _region);
 		}
 		else _restore_cursor(win);
-		if (e == ECE_UNDO) paste_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _prev_region);
-		else if (e == ECE_REDO) paste_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _region);
+		if (e == ECE_REDO) paste_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _region);
+		else if (e == ECE_UNDO) paste_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _prev_region);
 		return true;
 
 
@@ -150,22 +194,85 @@ bool EditCommand::exec(PatternWin& win, Execution e) {
 			_region = win._pattern_buffer;
 			int len = 0;
 			for (auto& b : _region) len = std::max(len, (int) b.size());
-			yank_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _cursor_x + _region.size(), _cursor_y1 + len, _prev_region);
-			if (paste_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _region, &_length_diffs)) return false;
+			yank_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _cursor_x + _region.size(),
+				_cursor_y1 + len, _prev_region);
+			if (paste_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _region, &_length_diffs)) {
+				return false;
+			}
 		}
 		else _restore_cursor(win);
-		if (e == ECE_UNDO) {
+		if (e == ECE_REDO) paste_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _region);
+		else if (e == ECE_UNDO) {
 			paste_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _prev_region);
 			// trim patterns
 			for (int c = 0; c < _region.size(); c++) {
-				auto it = win._tune->patterns.find(line[_cursor_x + c]);
-				if (it != win._tune->patterns.end()) {
+				auto it = patterns.find(line[_cursor_x + c]);
+				if (it != patterns.end()) {
 					auto& pat = it->second;
 					pat.resize(pat.size() - _length_diffs[c]);
 				}
 			}
 		}
-		else if (e == ECE_REDO) paste_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _region);
+		return true;
+
+	case TRANSPOSE_REGION:
+		if (e == ECE_DO) {
+			int xe = win._mark_x_end();
+			int ye = win._mark_y_end();
+			yank_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, xe, ye, _prev_region);
+			for (int c = _cursor_x; c < xe; c++) {
+				auto it = patterns.find(line[c]);
+				if (it != patterns.end()) {
+					auto& pat = it->second;
+					for (int i = _cursor_y1; i < ye && i < (int) pat.size(); i++) {
+						auto& row = pat[i];
+						if (row.note <= 0) continue;
+						row.note = clamp(row.note + _index, 1, 120);
+					}
+				}
+			}
+			yank_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, xe, ye, _region);
+			if (_region == _prev_region) return false;
+		}
+		else _restore_cursor(win);
+		if (e == ECE_REDO) paste_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _region);
+		else if (e == ECE_UNDO) paste_region(*win._tune, _cursor_y0, _cursor_x, _cursor_y1, _prev_region);
+		return true;
+
+
+	case DELETE_LINE:
+		if (e == ECE_DO) {
+			if (table.size() <= 1) return false;
+			if (_cursor_y0 >= (int) table.size() - 1) {
+				_cursor_y0 = win._cursor_y0 = table.size() - 1;
+			}
+			_prev_line = line;
+		}
+		else _restore_cursor(win);
+		if (e != ECE_UNDO) {
+			table.erase(table.begin() + _cursor_y0);
+			if (_cursor_y0 > (int) table.size() - 1) win._move_cursor(0, -1, 0);
+		}
+		else table.insert(table.begin() + _cursor_y0, _prev_line);
+		return true;
+
+
+	case INSERT_LINE:
+		if (e == ECE_DO) {
+			_cursor_y0 = win._cursor_y0 = _index;
+			if (_cursor_y0 >= (int) table.size()) {
+				_cursor_y0 = win._cursor_y0 = table.size();
+			}
+		}
+		else _restore_cursor(win);
+		if (e != ECE_UNDO) {
+			TableLine l;
+			table.insert(table.begin() + _cursor_y0, l);
+		}
+		else {
+			table.erase(table.begin() + _cursor_y0);
+			if (_cursor_y0 > (int) table.size() - 1) win._move_cursor(0, -1, 0);
+		}
 		return true;
 
 
@@ -215,11 +322,11 @@ void PatternWin::_move_cursor(int dx, int dy0, int dy1) {
 
 void PatternWin::draw() {
 	int server_row = server.get_row();
-	int server_block = server.get_block();
+	int server_line = server.get_line();
 
 	// follow
 	if (_edit_mode == EM_RECORD) {
-		_cursor_y0 = server_block;
+		_cursor_y0 = server_line;
 		_cursor_y1 = server_row;
 		_scroll();
 	}
@@ -319,7 +426,7 @@ void PatternWin::draw() {
 			if (i < (int) _tune->table.size()) {
 
 				int style = S_PATTERN;
-				if (i == server_block) style = S_PL_PATTERN;
+				if (i == server_line) style = S_PL_PATTERN;
 				if (i == _cursor_y0) style = S_HL_PATTERN;
 				if (i == _cursor_y0 && _cursor_x == chan_nr) {
 					style = (_edit_mode == EM_PATTERN_NAME) ? S_ET_PATTERN : S_CS_PATTERN;
@@ -346,7 +453,7 @@ void PatternWin::draw() {
 			bool on_pat = (pat && i < (int) pat->size());
 
 			int style = on_pat ? S_NOTE : S_FRAME;
-			if (on_pat && i == server_row && _tune->table[server_block][chan_nr] == pat_name) style = S_PL_NOTE;
+			if (on_pat && i == server_row && _tune->table[server_line][chan_nr] == pat_name) style = S_PL_NOTE;
 			if (i == _cursor_y1) style = S_HL_NOTE;
 			if (i == _cursor_y1 && _cursor_x == chan_nr) {
 				style = (_edit_mode == EM_MACRO_NAME) ? S_ET_NOTE :
@@ -524,26 +631,24 @@ void PatternWin::_key_macro_name(int ch) {
 }
 
 void PatternWin::_key_mark_pattern(int ch) {
-	auto& line = _tune->table[_cursor_y0];
 	switch (ch) {
-
-	case KEY_UP:	_move_cursor(0, 0, -1); break;
-	case KEY_DOWN:	_move_cursor(0, 0, 1); break;
-	case KEY_PPAGE:	_move_cursor(0, 0, -4); break;
-	case KEY_NPAGE:	_move_cursor(0, 0, 4); break;
-	case KEY_RIGHT:	_move_cursor(1, 0, 0); break;
-	case KEY_LEFT:	_move_cursor(-1, 0, 0); break;
+	case KEY_UP:	_move_cursor( 0, 0, -1); return;
+	case KEY_DOWN:	_move_cursor( 0, 0,  1); return;
+	case KEY_PPAGE:	_move_cursor( 0, 0, -4); return;
+	case KEY_NPAGE:	_move_cursor( 0, 0,  4); return;
+	case KEY_RIGHT:	_move_cursor( 1, 0,  0); return;
+	case KEY_LEFT:	_move_cursor(-1, 0,  0); return;
 
 	// mark whole pattern
 	case 'V':
 		_mark_y = 0;
 		_cursor_y1 = std::max<int>(0, get_max_rows(*_tune, _cursor_y0) - 1);
 		_scroll();
-		break;
+		return;
 
 	case KEY_ESCAPE:
 		_edit_mode = EM_NORMAL;
-		break;
+		return;
 
 	// copy pattern to buffer
 	case 'y':
@@ -551,24 +656,13 @@ void PatternWin::_key_mark_pattern(int ch) {
 	case KEY_BACKSPACE:
 		_edit_mode = EM_NORMAL;
 		_edit<EC::YANK_REGION>(ch != 'y');
-		break;
+		return;
 
 	// transpose
 	case '>':
 	case '<':
-		for (int c = _mark_x_begin(); c < _mark_x_end(); c++) {
-			auto it = _tune->patterns.find(line[c]);
-			if (it != _tune->patterns.end()) {
-				auto& pat = it->second;
-				for (int i = _mark_y_begin(); i < _mark_y_end() && i < (int) pat.size(); i++) {
-					auto& row = pat[i];
-					if (row.note <= 0) continue;
-					if (ch == '>' && row.note < 120) row.note++;
-					if (ch == '<' && row.note > 1) row.note--;
-				}
-			}
-		}
-		break;
+		_edit<EC::TRANSPOSE_REGION>((ch == '>') - (ch == '<'));
+		return;
 
 	default: break;
 	}
@@ -583,10 +677,10 @@ void PatternWin::_key_rec_norm_common(int ch) {
 
 	case '<':
 		if(--_octave < 0) _octave = 0;
-		break;
+		return;
 	case '>':
 		if (++_octave > 8) _octave = 8;
-		break;
+		return;
 
 	case '+': {
 			auto it = _tune->macros.find(_macro);
@@ -595,35 +689,35 @@ void PatternWin::_key_rec_norm_common(int ch) {
 			if (it != _tune->macros.end()) _macro = it->first;
 			else _macro = "";
 		}
-		break;
+		return;
 	case '-': {
 			MacroMap::reverse_iterator it(_tune->macros.find(_macro));
 			if (_macro == "") it = _tune->macros.rbegin();
 			if (it != _tune->macros.rend()) _macro = it->first;
 			else _macro = "";
 		}
-		break;
+		return;
 
 	case '\0':	// continue playing
 		if (server.is_playing()) server.pause();
 		else server.play(-1);
-		break;
+		return;
 
-	case ' ':	// play from the begining current block
+	case ' ':	// play from the begining current line
 		if (server.is_playing()) server.pause();
 		else server.play(_cursor_y0);
-		break;
+		return;
 
-	case '\n':	// loop current block
+	case '\n':	// loop current line
 		if (server.is_playing()) server.pause();
 		else server.play(_cursor_y0, true);
-		break;
+		return;
 
 
 	case 'M':	// mute
 		server.set_muted(_cursor_x, !server.get_muted(_cursor_x));
 		if (server.get_muted(_cursor_x)) server.play_row(_cursor_x, { -1 });
-		break;
+		return;
 	case 'L':	// solo
 		{
 			int s = 0;
@@ -638,7 +732,7 @@ void PatternWin::_key_rec_norm_common(int ch) {
 				}
 			}
 		}
-		break;
+		return;
 
 	default: break;
 	}
@@ -652,15 +746,10 @@ void PatternWin::_key_record(int ch) {
 		return;
 	}
 
-	int block_nr;
-	int row_nr;
-	server.get_nearest_row(block_nr, row_nr);
-
-
 	if (ch < 32 || ch > 127) return;
 	if (ch == '^') {
 		Row row { -1 };
-		_edit<EC::SET_ROW_AT>(row, block_nr, row_nr);
+		_edit<EC::RECORD_ROW>(row);
 		server.play_row(_cursor_x, row);
 		return;
 	}
@@ -673,7 +762,7 @@ void PatternWin::_key_record(int ch) {
 	if (a) {
 		Row row { n + 1 + _octave * 12 };
 		row.macros[0] = _macro;
-		_edit<EC::SET_ROW_AT>(row, block_nr, row_nr);
+		_edit<EC::RECORD_ROW>(row);
 		server.play_row(_cursor_x, row);
 	}
 }
@@ -687,12 +776,12 @@ void PatternWin::_key_normal(int ch) {
 	_key_rec_norm_common(ch);
 
 	switch (ch) {
-	case KEY_UP:		_move_cursor(0, 0, -1); return;
-	case KEY_DOWN:		_move_cursor(0, 0, 1); return;
-	case KEY_PPAGE:		_move_cursor(0, 0, -4); return;
-	case KEY_NPAGE:		_move_cursor(0, 0, 4); return;
-	case KEY_CTRL_UP:	_move_cursor(0, -1, 0); return;
-	case KEY_CTRL_DOWN:	_move_cursor(0, 1, 0); return;
+	case KEY_UP:		_move_cursor(0,  0, -1); return;
+	case KEY_DOWN:		_move_cursor(0,  0,  1); return;
+	case KEY_PPAGE:		_move_cursor(0,  0, -4); return;
+	case KEY_NPAGE:		_move_cursor(0,  0,  4); return;
+	case KEY_CTRL_UP:	_move_cursor(0, -1,  0); return;
+	case KEY_CTRL_DOWN:	_move_cursor(0,  1,  0); return;
 
 	case KEY_BACKSPACE:
 		_edit<EC::SET_ROW>(Row());
@@ -722,39 +811,29 @@ void PatternWin::_key_normal(int ch) {
 		return;
 
 	case 'X':			// delete row
-		if (pat) {
-			if ((int) pat->size() > std::max<int>(1, _cursor_y1)) {
-				pat->erase(pat->begin() + _cursor_y1);
-				if (_cursor_y1 > (int) pat->size() - 1) _move_cursor(0, 0, -1);
-			}
-		}
-		return;
-	case 'O':			// insert new row
-		if (pat) {
-			if ((int) pat->size() < _cursor_y1 + 1) pat->resize(_cursor_y1 + 1);
-			else pat->insert(pat->begin() + _cursor_y1, Row());
-		}
-		return;
-	case 'A':			// append new row
-		if (pat) {
-			if ((int) pat->size() < _cursor_y1 + 1) pat->resize(_cursor_y1 + 1);
-			else pat->insert(pat->begin() + _cursor_y1 + 1, Row());
-		}
+		_edit<EC::DELETE_ROW>();
 		return;
 
-	case KEY_CTRL_X:	// delete block
-		if ((int) _tune->table.size() > std::max<int>(1, _cursor_y0)) {
-			_tune->table.erase(_tune->table.begin() + _cursor_y0);
-			if (_cursor_y0 > (int) _tune->table.size() - 1) _move_cursor(0, -1, 0);
-		}
+	case 'O':			// insert new row
+		_edit<EC::INSERT_ROW>(_cursor_y1);
 		return;
-	case KEY_CTRL_O:	// insert new block
-		if ((int) _tune->table.size() < _cursor_y0 + 1) _tune->table.resize(_cursor_y0 + 1);
-		else _tune->table.insert(_tune->table.begin() + _cursor_y0, TableLine());
+
+	case 'A':			// append new row
+		_edit<EC::INSERT_ROW>(_cursor_y1 + 1);
+		_scroll();
 		return;
-	case KEY_CTRL_A:	// append new block
-		if ((int) _tune->table.size() < _cursor_y0 + 1) _tune->table.resize(_cursor_y0 + 1);
-		else _tune->table.insert(_tune->table.begin() + _cursor_y0 + 1, TableLine());
+
+	case KEY_CTRL_X:	// delete line
+		_edit<EC::DELETE_LINE>();
+		return;
+
+	case KEY_CTRL_O:	// insert new line
+		_edit<EC::INSERT_LINE>(_cursor_y0);
+		return;
+
+	case KEY_CTRL_A:	// append new line
+		_edit<EC::INSERT_LINE>(_cursor_y0 + 1);
+		_scroll();
 		return;
 
 	case KEY_CTRL_R:	// rename pattern
@@ -762,6 +841,7 @@ void PatternWin::_key_normal(int ch) {
 		_rename_pattern = true;
 		_old_name = pat_name;
 		return;
+
 	case KEY_CTRL_N:	// new pattern
 		_edit_mode = EM_PATTERN_NAME;
 		_rename_pattern = false;
@@ -803,10 +883,10 @@ void PatternWin::_key_normal(int ch) {
 
 	case 'U':
 		_undo();
-		break;
+		return;
 	case 'R':
 		_redo();
-		break;
+		return;
 
 
 	default: break;
@@ -875,9 +955,6 @@ void PatternWin::midi(int type, int value) {
 			for (int n : _chan_to_note) if (n != -1) return;
 		}
 
-		int block_nr;
-		int row_nr;
-		server.get_nearest_row(block_nr, row_nr);
-		_edit<EC::SET_ROW_AT>(row, block_nr, row_nr);
+		_edit<EC::RECORD_ROW>(row);
 	}
 }

@@ -58,9 +58,9 @@ struct Tune {
 };
 
 
-inline int get_max_rows(const Tune& tune, int block) {
+inline int get_max_rows(const Tune& tune, int line) {
 	int m = 0;
-	for (auto& pn : tune.table[block]) {
+	for (auto& pn : tune.table[line]) {
 		auto it = tune.patterns.find(pn);
 		if (it != tune.patterns.end()) m = std::max(m, (int) it->second.size());
 	}
