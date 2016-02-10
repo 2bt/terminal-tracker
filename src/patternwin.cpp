@@ -638,6 +638,14 @@ void PatternWin::_key_mark_pattern(int ch) {
 	case KEY_NPAGE:	_move_cursor( 0, 0,  4); return;
 	case KEY_RIGHT:	_move_cursor( 1, 0,  0); return;
 	case KEY_LEFT:	_move_cursor(-1, 0,  0); return;
+	case KEY_HOME:
+		_cursor_y1 = 0;
+		_scroll();
+		return;
+	case KEY_END:
+		_cursor_y1 = std::max(0, get_max_rows(*_tune, _cursor_y0) - 1);
+		_scroll();
+		return;
 
 	// mark whole pattern
 	case 'V':
@@ -782,6 +790,14 @@ void PatternWin::_key_normal(int ch) {
 	case KEY_NPAGE:		_move_cursor(0,  0,  4); return;
 	case KEY_CTRL_UP:	_move_cursor(0, -1,  0); return;
 	case KEY_CTRL_DOWN:	_move_cursor(0,  1,  0); return;
+	case KEY_HOME:
+		_cursor_y1 = 0;
+		_scroll();
+		return;
+	case KEY_END:
+		_cursor_y1 = std::max(0, get_max_rows(*_tune, _cursor_y0) - 1);
+		_scroll();
+		return;
 
 	case KEY_BACKSPACE:
 		_edit<EC::SET_ROW>(Row());
