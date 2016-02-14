@@ -1,11 +1,12 @@
-language: cpp
 os: linux
-dist: unstable
+dist: trusty
+sudo: required
+language: cpp
 compiler:
   - gcc
   - clang
 install:
   - sudo apt-get update -qq
   - sudo apt-get install -y libncurses5-dev libsdl1.2-dev libportmidi-dev libsndfile1-dev
-  - sudo apt-get install libuv libuv1 libuv0.10
+  - sudo apt-get install -y libuv-dev
 script: make
