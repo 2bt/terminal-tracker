@@ -1,4 +1,6 @@
 language: cpp
+os: linux
+dist: unstable
 compiler:
   - gcc
   - clang
