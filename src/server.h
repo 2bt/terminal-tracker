@@ -18,7 +18,7 @@ public:
 	void	generate_full_log();
 	void	start();
 
-	void	play(int line=0, bool looping=false);
+	void	play(int line=0, int row=0, bool looping=false);
 	void	pause();
 	bool	is_playing() const { return _playing; }
 	int		get_row()	const { return _row; }

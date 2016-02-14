@@ -58,18 +58,20 @@ Server::~Server() {
 	Pm_Terminate();
 }
 
-void Server::play(int line, bool looping) {
+void Server::play(int line, int row, bool looping) {
 	std::lock_guard<std::mutex> guard(_mutex);
 	_playing = true;
 	_lineloop = looping;
+	_line = line;
+	_row = row;
 	_frame = 0;
 	_tick = 0;
-	if (line >= 0) { // don't play from current row
-		_line = line;
-		_row = 0;
-	}
 	for (auto& chan : _channels) chan.init();
 	_fx.init();
+
+	// pre-configure params
+	_ticks_per_row.init(_tune->ticks_per_row);
+	_param_batch.configure(_tune->envs);
 }
 
 void Server::pause() {

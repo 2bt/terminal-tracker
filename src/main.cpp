@@ -117,9 +117,9 @@ START:
 		msg_win.draw();
 		pat_win.draw();
 
-//		static int och = ch;
-//		if (ch != ERR) och = ch;
-//		mvprintw(LINES - 1, COLS - 24, "%3d %-20s", och, keyname(och));
+		static int och = ch;
+		if (ch != ERR) och = ch;
+		mvprintw(LINES - 1, COLS - 24, "%3d %-20s", och, keyname(och));
 
 		refresh();
 	}

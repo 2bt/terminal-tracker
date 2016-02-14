@@ -707,18 +707,27 @@ void PatternWin::_key_rec_norm_common(int ch) {
 		return;
 
 	case '\0':	// continue playing
-		if (server.is_playing()) server.pause();
-		else server.play(-1);
+		if (server.is_playing()) {
+			_edit_mode = EM_NORMAL;
+			server.pause();
+		}
+		else server.play(server.get_line(), server.get_row());
 		return;
 
 	case ' ':	// play from the begining current line
-		if (server.is_playing()) server.pause();
+		if (server.is_playing()) {
+			_edit_mode = EM_NORMAL;
+			server.pause();
+		}
 		else server.play(_cursor_y0);
 		return;
 
 	case '\n':	// loop current line
-		if (server.is_playing()) server.pause();
-		else server.play(_cursor_y0, true);
+		if (server.is_playing()) {
+			_edit_mode = EM_NORMAL;
+			server.pause();
+		}
+		else server.play(_cursor_y0, 0, true);
 		return;
 
 
@@ -888,6 +897,7 @@ void PatternWin::_key_normal(int ch) {
 
 	case KEY_TAB:
 		_edit_mode = EM_RECORD;
+		if (!server.is_playing()) server.play(_cursor_y0, _cursor_y1);
 		return;
 
 	case 'S':
