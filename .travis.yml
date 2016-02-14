@@ -4,5 +4,5 @@ compiler:
   - clang
 install:
   - sudo apt-get update -qq
-  - sudo apt-get install -y libncurses5-dev libsdl1.2-dev libportmidi-dev libsndfile1-dev libuv-dev
+  - sudo apt-get install -y libncurses5-dev libsdl1.2-dev libportmidi-dev libsndfile1-dev libuv1-dev
 script: make
