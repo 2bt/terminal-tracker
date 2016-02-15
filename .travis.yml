@@ -11,5 +11,5 @@ install:
   - #sudo apt-get install -y libuv1-dev
   - wget archive.ubuntu.com/ubuntu/pool/universe/libu/libuv1/libuv1_1.6.1.orig.tar.gz
   - tar -xzf libuv1_1.6.1.orig.tar.gz
-  - cd libuv1_1.6.1 && sh autogen.sh && ./configure && make && make check && sudo make install
+  - cd libuv-1.6.1 && sh autogen.sh && ./configure && make && make check && sudo make install
 script: make
