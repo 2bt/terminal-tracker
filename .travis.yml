@@ -8,5 +8,8 @@ compiler:
 install:
   - sudo apt-get update -qq
   - sudo apt-get install -y libncurses5-dev libsdl1.2-dev libportmidi-dev libsndfile1-dev
-  - sudo apt-get install -y libuv1-dev
+  - #sudo apt-get install -y libuv1-dev
+  - wget archive.ubuntu.com/ubuntu/pool/universe/libu/libuv1/libuv1_1.6.1.orig.tar.gz
+  - tar -xzf libuv1_1.6.1.orig.tar.gz
+  - cd libuv1_1.6.1 && sh autogen.sh && ./configure && make && make check && sudo make install
 script: make
