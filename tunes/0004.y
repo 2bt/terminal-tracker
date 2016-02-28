@@ -91,7 +91,7 @@ MACRO bb < b
 
 
 MACRO bg < b
-	gliss = 0.4
+	gliss = 0.5
 
 MACRO pad
 	volume = 0.4

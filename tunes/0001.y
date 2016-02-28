@@ -1,6 +1,9 @@
 ticks = 8
 frames = 800
 
+echo_length = 8
+
+
 MACRO boom
 	panning = 0
 	volume = 1 1.5
@@ -55,7 +58,6 @@ MACRO snare < default
 	wave = 4 0 0 4
 	puslewidth = 0.5
 	offset = 40 12 0 70
-
 
 MACRO sn_ < snare
 	panning = 0.1
@@ -151,15 +153,14 @@ MACRO bell
 	panning = 0
 	volume = 1
 	attack = 0.0045
-	sustain = 0.2
-	decay = 1.5
-	release = 4
+	sustain = 0
+	decay = 0.2
+	release = 1
 	pulsewidth = 0.2 0.3 0.4 0.5
 	wave = 0
 	offset = 0
 	vibratodepth = 0 0 0 0 0 0 0.1
 	vibratospeed = 0.07
-
 
 	echo = 1
 
