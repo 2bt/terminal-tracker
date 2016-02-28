@@ -140,7 +140,7 @@ bool EditCommand::exec(PatternWin& win, Execution e) {
 	case DELETE_ROW:
 		if (e == ECE_DO) {
 			if (!pat || pat->size() <= 1) return false;
-			_cursor_y1 = win._cursor_y1 = _index;
+//			_cursor_y1 = win._cursor_y1 = _index;
 			if (_cursor_y1 >= (int) pat->size() - 1) {
 				_cursor_y1 = win._cursor_y1 = pat->size() - 1;
 			}
@@ -158,6 +158,7 @@ bool EditCommand::exec(PatternWin& win, Execution e) {
 	case INSERT_ROW:
 		if (!pat) return false;
 		if (e == ECE_DO) {
+			_cursor_y1 = win._cursor_y1 = _index;
 			if (_cursor_y1 >= (int) pat->size()) {
 				_cursor_y1 = win._cursor_y1 = pat->size();
 			}
@@ -429,7 +430,8 @@ void PatternWin::draw() {
 				if (i == server_line) style = S_PL_PATTERN;
 				if (i == _cursor_y0) style = S_HL_PATTERN;
 				if (i == _cursor_y0 && _cursor_x == chan_nr) {
-					style = (_edit_mode == EM_PATTERN_NAME) ? S_ET_PATTERN : S_CS_PATTERN;
+					style = (_edit_mode == EM_PATTERN_NAME) ? S_ET_PATTERN :
+							(_edit_mode == EM_RECORD) ? S_RC_PATTERN : S_CS_PATTERN;
 				}
 				set_style(style);
 

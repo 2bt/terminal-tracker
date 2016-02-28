@@ -162,6 +162,11 @@ bool Server::apply_macro(const std::string& macro_name, Channel& chan) const {
 	return apply_macro(it->second, chan);
 }
 
+
+static short map_amp(float x) {
+	return int(tanhf(x * 0.5) * 32767);
+}
+
 void Server::mix(short* buffer, int length) {
 	std::lock_guard<std::mutex> guard(_mutex);
 	for (int i = 0; i < length; i += 2) {
@@ -194,8 +199,10 @@ void Server::mix(short* buffer, int length) {
 		_fx.add_mix(frame);
 
 
-		buffer[i + 0] = clamp((int) (frame[0] * 6000), -32768, 32767);
-		buffer[i + 1] = clamp((int) (frame[1] * 6000), -32768, 32767);
+		buffer[i + 0] = clamp((int) (frame[0] * 8000), -32768, 32767);
+		buffer[i + 1] = clamp((int) (frame[1] * 8000), -32768, 32767);
+//		buffer[i + 0] = map_amp(frame[0]);
+//		buffer[i + 1] = map_amp(frame[1]);
 	}
 	sf_writef_short(_log, buffer, length / 2);
 }
