@@ -15,7 +15,7 @@ public:
 	using MidiCallback = std::function<void(int,int)>;
 	~Server();
 	void	init(Tune* tune, MidiCallback callback);
-	void	generate_full_log();
+	void	generate_full_log(int subtune, int reps);
 	void	start();
 
 	void	play(int line=0, int row=0, bool looping=false);

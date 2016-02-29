@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <getopt.h>
 #include <ctype.h>
 #include <unistd.h>
 #include <uv.h>
@@ -35,22 +36,47 @@ void reload(uv_fs_event_t* handle, const char* name, int events, int status) {
 
 void done() { endwin(); }
 
+
+void usage(const char* prg) {
+	fprintf(stderr, "Usage: %s [options] tune.x [tune.y]\n", prg);
+	fprintf(stderr, "  -w         Write entire tune to log.wav and quit.\n");
+	fprintf(stderr, "  -r reps    Repeate tune. Implies -w.\n");
+	fprintf(stderr, "  -s nr      Choose subtune. Implies -w.\n");
+}
+
+
 int main(int argc, char** argv) {
 	bool write_tune = false;
-START:
-	if (argc < 2 || argc > 4) {
-		printf("Usage: %s [-w] tune.x [tune.y]\n", argv[0]);
-		printf("  -w    write entire tune to log.wav and quit\n");
-		return 0;
+	int write_reps = 1;
+	int write_subtune = 0;
+
+	int opt;
+	while ((opt = getopt(argc, argv, "wr:s:")) != -1) {
+		switch (opt) {
+		case 'w':
+			write_tune = true;
+			break;
+		case 'r':
+			write_tune = true;
+			write_reps = atoi(optarg);
+			break;
+		case 's':
+			write_tune = true;
+			write_subtune = atoi(optarg);
+			break;
+		default:
+			usage(argv[0]);
+			return 1;
+		}
 	}
-	if (strcmp(argv[1], "-w") == 0) {
-		write_tune = true;
-		if (--argc < 2) goto START;
-		argv++;
+	int opts_left = argc - optind;
+	if (opts_left < 1 || opts_left > 2) {
+		usage(argv[0]);
+		return opts_left != 0;
 	}
 
-	const char* filename = argv[1];
-	if (argc == 3) watch = argv[2];
+	const char* filename = argv[optind];
+	if (opts_left == 2) watch = argv[optind + 1];
 
 
 	if (!load_tune(tune, filename)) {
@@ -80,7 +106,7 @@ START:
 	server.init(&tune, [&](int t, int v) { pat_win.midi(t, v); });
 	if (write_tune) {
 		printf("Writing tune...\n");
-		server.generate_full_log();
+		server.generate_full_log(write_subtune, write_reps);
 		return 0;
 	}
 	server.start();

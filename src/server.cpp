@@ -20,13 +20,20 @@ void Server::init(Tune* tune, MidiCallback callback) {
 	_log = sf_open("log.wav", SFM_WRITE, &info);
 }
 
-void Server::generate_full_log() {
-	play();
-	short buffer[_tune->frames_per_tick * 2];
-	do {
-		mix(buffer, _tune->frames_per_tick * 2);
+void Server::generate_full_log(int subtune, int reps) {
+	int start_line = 0;
+	while (subtune-- > 0) {
+		auto& table = _tune->table;
+		while (start_line < table.size() - 1 && table[start_line] != TableLine()) start_line++;
+		while (start_line < table.size() - 1 && table[start_line] == TableLine()) start_line++;
 	}
-	while (!(_frame == 0 && _tick == 0 && _row == 0 && _line == 0));
+
+	play(start_line);
+	short buffer[_tune->frames_per_tick * 2];
+	while (reps-- > 0) {
+		do 	mix(buffer, _tune->frames_per_tick * 2);
+		while (!(_frame == 0 && _tick == 0 && _row == 0 && _line == start_line));
+	}
 	pause();
 }
 
