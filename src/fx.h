@@ -18,10 +18,10 @@ public:
 
 private:
 
-	float	_echo_frames[MAX_ECHO_LENGTH][2];
-	int		_echo_pos;
+	float	m_echo_frames[MAX_ECHO_LENGTH][2];
+	int		m_echo_pos;
 
 
-	float	_echo_feedback;
-	int		_echo_length;
+	float	m_echo_feedback;
+	int		m_echo_length;
 };

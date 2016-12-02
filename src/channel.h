@@ -17,12 +17,12 @@ public:
 
 	void init();
 	void reset_params();
-	bool configure_params(const EnvelopeMap& envs);
+	void configure_params(const EnvelopeMap& envs);
 	void note_event(int note);
 	void tick();
 	void add_mix(float* frame, const Channel& modulator, FX& fx);
 
-	float get_level() const { return _level * _volume; }
+	float get_level() const { return m_level * m_volume; }
 
 private:
 	bool set_param_env(std::string name, const Envelope& env);
@@ -30,48 +30,47 @@ private:
 	enum class State { OFF, RELEASE, ATTACK, HOLD };
 	enum class Wave { PULSE, TRIANGLE, SINE, NOISE, C64NOISE };
 
-	State			_state;
-	float			_level;
-	float			_phase;
-	float			_speed;
-	unsigned int	_shift = 0x7ffff8;
+	State			m_state;
+	float			m_level;
+	float			m_phase;
+	float			m_speed;
+	unsigned int	m_shift = 0x7ffff8;
 
 
-	float			_note;
-	float			_dst_note;
-	float			_gliss;
-	float			_offset;
+	float			m_note;
+	float			m_dst_note;
+	float			m_gliss;
+	float			m_offset;
 
-	Wave			_wave;
-	float			_pulsewidth;
-	float			_pulsewidth_sweep;
-	float			_volume;
-	float			_panning[2];
-	float			_smooth[2];
+	Wave			m_wave;
+	float			m_pulsewidth;
+	float			m_pulsewidth_sweep;
+	float			m_volume;
+	float			m_panning[2];
+	float			m_smooth[2];
 
-	float			_resolution;
-	float			_vibrato_phase;
-	float			_vibrato_speed;
-	float			_vibrato_depth;
+	float			m_resolution;
+	float			m_vibrato_phase;
+	float			m_vibrato_speed;
+	float			m_vibrato_depth;
 
-	float			_attack;
-	float			_decay;
-	float			_sustain;
-	float			_release;
+	float			m_attack;
+	float			m_decay;
+	float			m_sustain;
+	float			m_release;
 
-	bool			_sync;
-	float			_amp;
-	float			_ringmod;
+	bool			m_sync;
+	float			m_amp;
+	float			m_ringmod;
 
-	uint32_t		_filter;
-	float			_cutoff;
-	float			_resonance;
-	float			_filter_l;
-	float			_filter_b;
-	float			_filter_h;
+	uint32_t		m_filter;
+	float			m_cutoff;
+	float			m_resonance;
+	float			m_filter_l;
+	float			m_filter_b;
+	float			m_filter_h;
 
-	float			_echo;
-
+	float			m_echo;
 
 	enum ParamID {
 		PID_WAVE,
@@ -98,7 +97,7 @@ private:
 		PID_PARAM_COUNT
 	};
 
-	static const std::map<std::string,int>		_param_mapping;
-	ParamBatch<PID_PARAM_COUNT,_param_mapping>	_param_batch;
+	static const std::map<std::string,int>		m_param_mapping;
+	ParamBatch<PID_PARAM_COUNT,m_param_mapping>	m_param_batch;
 };
 

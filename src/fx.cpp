@@ -4,31 +4,31 @@
 
 void FX::init() {
 
-	memset(_echo_frames, 0, sizeof(_echo_frames));
-	_echo_pos = 0;
+	memset(m_echo_frames, 0, sizeof(m_echo_frames));
+	m_echo_pos = 0;
 
-	_echo_feedback = 0.4;
-	_echo_length = 650 * 8 * 3;
+	m_echo_feedback = 0.4;
+	m_echo_length = 650 * 8 * 3;
 }
 
 
 void FX::echo(float l, float r) {
-	_echo_frames[_echo_pos][0] += l;
-	_echo_frames[_echo_pos][1] += r;
+	m_echo_frames[m_echo_pos][0] += l;
+	m_echo_frames[m_echo_pos][1] += r;
 }
 
 
 void FX::add_mix(float* frame) {
 
-	float* echo = _echo_frames[(_echo_pos + MAX_ECHO_LENGTH - _echo_length) % MAX_ECHO_LENGTH];
+	float* echo = m_echo_frames[(m_echo_pos + MAX_ECHO_LENGTH - m_echo_length) % MAX_ECHO_LENGTH];
 
-	frame[0] += echo[1] * _echo_feedback;
-	frame[1] += echo[0] * _echo_feedback;
+	frame[0] += echo[1] * m_echo_feedback;
+	frame[1] += echo[0] * m_echo_feedback;
 
-	_echo_frames[_echo_pos][0] += echo[1] * _echo_feedback;
-	_echo_frames[_echo_pos][1] += echo[0] * _echo_feedback;
+	m_echo_frames[m_echo_pos][0] += echo[1] * m_echo_feedback;
+	m_echo_frames[m_echo_pos][1] += echo[0] * m_echo_feedback;
 
-	_echo_pos = (_echo_pos + 1) % MAX_ECHO_LENGTH;
-	_echo_frames[_echo_pos][0] = 0;
-	_echo_frames[_echo_pos][1] = 0;
+	m_echo_pos = (m_echo_pos + 1) % MAX_ECHO_LENGTH;
+	m_echo_frames[m_echo_pos][0] = 0;
+	m_echo_frames[m_echo_pos][1] = 0;
 }

@@ -7,17 +7,17 @@ Channel::Channel() {
 }
 
 void Channel::init() {
-	_state = State::OFF;
-	_level = 0;
-	_filter_l = 0;
-	_filter_b = 0;
-	_filter_h = 0;
-	_smooth[0] = 0;
-	_smooth[1] = 0;
+	m_state = State::OFF;
+	m_level = 0;
+	m_filter_l = 0;
+	m_filter_b = 0;
+	m_filter_h = 0;
+	m_smooth[0] = 0;
+	m_smooth[1] = 0;
 	reset_params();
 }
 
-const std::map<std::string,int> Channel::_param_mapping = {
+const std::map<std::string,int> Channel::m_param_mapping = {
 	{ "wave",			PID_WAVE			},
 	{ "offset",			PID_OFFSET			},
 	{ "volume",			PID_VOLUME			},
@@ -67,142 +67,142 @@ void Channel::reset_params() {
 	configure_params(envs);
 }
 
-bool Channel::configure_params(const EnvelopeMap& envs) {
-	return _param_batch.configure(envs);
+void Channel::configure_params(const EnvelopeMap& envs) {
+	m_param_batch.configure(envs);
 }
 
 void Channel::note_event(int note) {
 	if (note == -1) {
-		if (_state != State::OFF) _state = State::RELEASE;
+		if (m_state != State::OFF) m_state = State::RELEASE;
 	}
 	if (note > 0) {
-		_dst_note = note;
-		_state = State::ATTACK;
-		_level = 0;
-		_phase = 0;
-		_vibrato_phase = 0;
+		m_dst_note = note;
+		m_state = State::ATTACK;
+		m_level = 0;
+		m_phase = 0;
+		m_vibrato_phase = 0;
 	}
 }
 
 
 void Channel::tick() {
-	_param_batch.tick([this](int pid, float v) {
+
+	m_param_batch.tick([this](int pid, float v) {
 		switch (pid) {
 
-		case PID_OFFSET:			_offset			= v; break;
-		case PID_WAVE:				_wave			= (Wave) v; break;
-		case PID_PULSEWIDTH:		_pulsewidth		= fmodf(v, 1); break;
-		case PID_VOLUME:			_volume			= clamp<float>(v, 0, 5); break;
-		case PID_PULSEWIDTH_SWEEP:	_pulsewidth_sweep = v / 1000; break;
-		case PID_GLISS:				_gliss			= std::max(0.0f, v); break;
+		case PID_OFFSET:			m_offset			= v; break;
+		case PID_WAVE:				m_wave			= (Wave) v; break;
+		case PID_PULSEWIDTH:		m_pulsewidth		= fmodf(v, 1); break;
+		case PID_VOLUME:			m_volume			= clamp<float>(v, 0, 5); break;
+		case PID_PULSEWIDTH_SWEEP:	m_pulsewidth_sweep = v / 1000; break;
+		case PID_GLISS:				m_gliss			= std::max(0.0f, v); break;
 
 		case PID_PANNING:
-			_panning[0] = sqrtf(0.5 - clamp<float>(v, -1, 1) * 0.5);
-			_panning[1] = sqrtf(0.5 + clamp<float>(v, -1, 1) * 0.5);
+			m_panning[0] = sqrtf(0.5 - clamp<float>(v, -1, 1) * 0.5);
+			m_panning[1] = sqrtf(0.5 + clamp<float>(v, -1, 1) * 0.5);
 			break;
 
-		case PID_RESOLUTION:		_resolution		= std::max(0.0f, v); break;
-		case PID_VIBRATO_SPEED:	_vibrato_speed	= v; break;
-		case PID_VIBRATO_DEPTH:	_vibrato_depth	= v; break;
+		case PID_RESOLUTION:		m_resolution		= std::max(0.0f, v); break;
+		case PID_VIBRATO_SPEED:	m_vibrato_speed	= v; break;
+		case PID_VIBRATO_DEPTH:	m_vibrato_depth	= v; break;
 
-		case PID_ATTACK:			_attack			= 1.0 / 44100 / clamp(v); break;
-		case PID_DECAY:				_decay			= expf(log(0.01) / 44100 / v); break;
-		case PID_SUSTAIN:			_sustain		= clamp(v); break;
-		case PID_RELEASE:			_release		= expf(log(0.01) / 44100 / v); break;
+		case PID_ATTACK:			m_attack			= 1.0 / 44100 / clamp(v); break;
+		case PID_DECAY:				m_decay			= expf(log(0.01) / 44100 / v); break;
+		case PID_SUSTAIN:			m_sustain		= clamp(v); break;
+		case PID_RELEASE:			m_release		= expf(log(0.01) / 44100 / v); break;
 
-		case PID_SYNC:				_sync			= v > 0; break;
-		case PID_RINGMOD:			_ringmod		= clamp(v); break;
+		case PID_SYNC:				m_sync			= v > 0; break;
+		case PID_RINGMOD:			m_ringmod		= clamp(v); break;
 
 
-		case PID_FILTER:			_filter			= (uint32_t) v; break;
-		case PID_RESONANCE:			_resonance		= 1.1 - 0.04 * clamp<float>(v, 0, 15); break;
-		case PID_CUTOFF: 			_cutoff			= clamp<float>(v, 0, 100) * 0.01; break;
+		case PID_FILTER:			m_filter			= (uint32_t) v; break;
+		case PID_RESONANCE:			m_resonance		= 1.1 - 0.04 * clamp<float>(v, 0, 15); break;
+		case PID_CUTOFF: 			m_cutoff			= clamp<float>(v, 0, 100) * 0.01; break;
 
-		case PID_ECHO: 				_echo			= clamp<float>(v, 0, 1); break;
+		case PID_ECHO: 				m_echo			= clamp<float>(v, 0, 1); break;
 
 		default: break;
 		}
 	});
 
 
+	m_pulsewidth = fmodf(m_pulsewidth + m_pulsewidth_sweep, 1);
 
-	_pulsewidth = fmodf(_pulsewidth + _pulsewidth_sweep, 1);
 
-
-	if (_gliss > 0) {
-		if (_note < _dst_note) {
-			_note = std::min(_note + _gliss, _dst_note);
+	if (m_gliss > 0) {
+		if (m_note < m_dst_note) {
+			m_note = std::min(m_note + m_gliss, m_dst_note);
 		}
 		else {
-			_note = std::max(_note - _gliss, _dst_note);
+			m_note = std::max(m_note - m_gliss, m_dst_note);
 		}
 	}
-	else _note = _dst_note;
+	else m_note = m_dst_note;
 
 
 	// vibrato
-	_vibrato_phase = fmodf(_vibrato_phase + _vibrato_speed, 1);
-	float vib = sinf(_vibrato_phase * 2 * M_PI) * _vibrato_depth;
-	_speed = powf(2, (_note + _offset + vib - 58) * (1 / 12.0)) * (440.0 / MIXRATE);
+	m_vibrato_phase = fmodf(m_vibrato_phase + m_vibrato_speed, 1);
+	float vib = sinf(m_vibrato_phase * 2 * M_PI) * m_vibrato_depth;
+	m_speed = powf(2, (m_note + m_offset + vib - 58) * (1 / 12.0)) * (440.0 / MIXRATE);
 
 }
 
 void Channel::add_mix(float* frame, const Channel& modulator, FX& fx) {
 
-	switch (_state) {
+	switch (m_state) {
 	case State::OFF: return;
 	case State::ATTACK:
-		_level += _attack;
-		if (_level > 1) {
-			_level = 1;
-			_state = State::HOLD;
+		m_level += m_attack;
+		if (m_level > 1) {
+			m_level = 1;
+			m_state = State::HOLD;
 		}
 		break;
 	case State::HOLD:
-		_level = _sustain + (_level - _sustain) * _decay;
+		m_level = m_sustain + (m_level - m_sustain) * m_decay;
 		break;
 	case State::RELEASE:
 	default:
-		_level *= _release;
-		if (_level < 0.0001) _state = State::OFF;
+		m_level *= m_release;
+		if (m_level < 0.0001) m_state = State::OFF;
 		break;
 	}
 
 
-	_phase += _speed;
-	if (_wave != Wave::C64NOISE) _phase = fmodf(_phase, 1);
+	m_phase += m_speed;
+	if (m_wave != Wave::C64NOISE) m_phase = fmodf(m_phase, 1);
 
 	// sync
-	if (_sync && modulator._phase < modulator._speed) {
-		_phase = modulator._phase / modulator._speed * _speed;
+	if (m_sync && modulator.m_phase < modulator.m_speed) {
+		m_phase = modulator.m_phase / modulator.m_speed * m_speed;
 	}
 
 	float amp = 0;
 
-	switch (_wave) {
+	switch (m_wave) {
 	case Wave::PULSE:
-		amp = _phase < _pulsewidth ? -1 : 1;
+		amp = m_phase < m_pulsewidth ? -1 : 1;
 		break;
 	case Wave::TRIANGLE:
-		amp = _phase < _pulsewidth ?
-			2 / _pulsewidth * _phase - 1 :
-			2 / (_pulsewidth - 1) * (_phase - _pulsewidth) + 1;
+		amp = m_phase < m_pulsewidth ?
+			2 / m_pulsewidth * m_phase - 1 :
+			2 / (m_pulsewidth - 1) * (m_phase - m_pulsewidth) + 1;
 		break;
 	case Wave::SINE:
-		amp = sinf(_phase * 2 * M_PI);
+		amp = sinf(m_phase * 2 * M_PI);
 		break;
 	case Wave::NOISE:
 		amp = rand() / float(RAND_MAX) * 2 - 1;
 		break;
 	case Wave::C64NOISE: {
-		unsigned int s = _shift;
+		unsigned int s = m_shift;
 		unsigned int b;
-		while (_phase > 0.1) {
-			_phase -= 0.1;
+		while (m_phase > 0.1) {
+			m_phase -= 0.1;
 			b = ((s >> 22) ^ (s >> 17)) & 1;
 			s = ((s << 1) & 0x7fffff) + b;
 		}
-		_shift = s;
+		m_shift = s;
 		amp = (
 			((s & 0x400000) >> 11) |
 			((s & 0x100000) >> 10) |
@@ -218,42 +218,42 @@ void Channel::add_mix(float* frame, const Channel& modulator, FX& fx) {
 	}
 
 	// low rez
-	if (_resolution > 0) amp = floorf(amp * _resolution) / _resolution;
+	if (m_resolution > 0) amp = floorf(amp * m_resolution) / m_resolution;
 
 
 	// filter
-	if (_filter) {
+	if (m_filter) {
 
-		_filter_h = amp - _filter_b * _resonance - _filter_l;
-		_filter_b += _cutoff * _filter_h;
-		_filter_l += _cutoff * _filter_b;
+		m_filter_h = amp - m_filter_b * m_resonance - m_filter_l;
+		m_filter_b += m_cutoff * m_filter_h;
+		m_filter_l += m_cutoff * m_filter_b;
 
 		amp = 0;
 
-		if (_filter & 1) amp += _filter_l;
-		if (_filter & 2) amp += _filter_b;
-		if (_filter & 4) amp += _filter_h;
+		if (m_filter & 1) amp += m_filter_l;
+		if (m_filter & 2) amp += m_filter_b;
+		if (m_filter & 4) amp += m_filter_h;
 	}
 
 
 	// ringmod
-	_amp = amp;
-	amp = amp * (1 - _ringmod) + modulator._amp * amp * _ringmod;
+	m_amp = amp;
+	amp = amp * (1 - m_ringmod) + modulator.m_amp * amp * m_ringmod;
 
 
 	// smooth volume change
 	{
 		float v;
 		const float s = 0.97;
-		v = _level * _volume * _panning[0]; _smooth[0] = _smooth[0] * s + v * (1 - s);
-		v = _level * _volume * _panning[1]; _smooth[1] = _smooth[1] * s + v * (1 - s);
+		v = m_level * m_volume * m_panning[0]; m_smooth[0] = m_smooth[0] * s + v * (1 - s);
+		v = m_level * m_volume * m_panning[1]; m_smooth[1] = m_smooth[1] * s + v * (1 - s);
 	}
 
-	float out[] = { amp * _smooth[0], amp * _smooth[1] };
+	float out[] = { amp * m_smooth[0], amp * m_smooth[1] };
 	frame[0] += out[0];
 	frame[1] += out[1];
 
 	// global effects
-	fx.echo(out[0] * _echo, out[1] * _echo);
+	fx.echo(out[0] * m_echo, out[1] * m_echo);
 }
 

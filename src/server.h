@@ -20,14 +20,14 @@ public:
 
 	void	play(int line=0, int row=0, bool looping=false);
 	void	pause();
-	bool	is_playing() const { return _playing; }
-	int		get_row()	const { return _row; }
-	int		get_line()	const { return _line; }
+	bool	is_playing() const { return m_playing; }
+	int		get_row()	const { return m_row; }
+	int		get_line()	const { return m_line; }
 
-	void	set_muted(int chan_nr, bool m) { _muted[chan_nr] = m; }
-	bool	get_muted(int chan_nr) const { return _muted[chan_nr]; }
+	void	set_muted(int chan_nr, bool m) { m_muted[chan_nr] = m; }
+	bool	get_muted(int chan_nr) const { return m_muted[chan_nr]; }
 
-	float	get_chan_level(int chan_nr) const { return _channels[chan_nr].get_level(); }
+	float	get_chan_level(int chan_nr) const { return m_channels[chan_nr].get_level(); }
 
 	void	get_nearest_row(int& line_nr, int& row_nr) const;
 	void	play_row(int chan_nr, const Row& row);
@@ -38,30 +38,30 @@ private:
 	}
 	void mix(short* buffer, int length);
 	void tick();
-	bool apply_macro(const Macro& macro, Channel& chan) const;
-	bool apply_macro(const std::string& macro_name, Channel& chan) const;
+	void apply_macro(const Macro& macro, Channel& chan) const;
+	void apply_macro(const std::string& macro_name, Channel& chan) const;
 
-	SNDFILE*			_log;
-	PortMidiStream*		_midi = nullptr;
-	MidiCallback		_midi_callback = nullptr;
-	std::mutex			_mutex;
+	SNDFILE*			m_log;
+	PortMidiStream*		m_midi = nullptr;
+	MidiCallback		m_midi_callback = nullptr;
+	std::mutex			m_mutex;
 
-	volatile bool 	_playing;
-	volatile bool	_lineloop;
-	volatile int	_frame;
-	volatile int	_tick;
-	volatile int	_row;
-	volatile int	_line;
-	Param			_ticks_per_row;
+	volatile bool 	m_playing;
+	volatile bool	m_lineloop;
+	volatile int	m_frame;
+	volatile int	m_tick;
+	volatile int	m_row;
+	volatile int	m_line;
+	Param			m_ticks_per_row;
 
-	SimpleParamBatch		_param_batch;
+	SimpleParamBatch		m_param_batch;
 
 
-	std::array<bool,CHANNEL_COUNT>		_muted;
-	std::array<Channel,CHANNEL_COUNT>	_channels;
-	FX									_fx;
+	std::array<bool,CHANNEL_COUNT>		m_muted;
+	std::array<Channel,CHANNEL_COUNT>	m_channels;
+	FX									m_fx;
 
-	Tune* _tune;
+	Tune* m_tune;
 };
 
 extern Server server;

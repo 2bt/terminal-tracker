@@ -165,7 +165,7 @@ MACRO trmp
 	attack = 0.0045
 	sustain = 0.2
 	decay = 2
-	pulsewidth = 0.1 | +0.008
+	pulsewidth = 0.1
 	wave = 0
 	offset = 0
 	vibratodepth = 0 0 0 0 0 0 0.1
